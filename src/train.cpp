@@ -1,4 +1,5 @@
 #include <cstring>
+#include <iostream>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -101,4 +102,10 @@ Train *add_train(const std::string &i, int n, int m, const std::string &s,
   }
   strcpy(train->type, t.c_str());
   return train;
+}
+void query_train(Train *train) {
+  std::cout << train->trainID << ' ' << train->type << '\n';
+  for (int i = 0; i < train->stationNum; i++) {
+    std::cout << train->stations[i] << ' ' << train->;
+  }
 }
