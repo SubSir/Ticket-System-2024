@@ -1,6 +1,4 @@
-#ifndef TRAIN_CPP
-#define TRAIN_CPP
-#include "time.cpp"
+#include "time.hpp"
 #include <cstring>
 #include <iostream>
 #include <regex>
@@ -191,4 +189,3 @@ Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
     order->status = 2;
   return order;
 }
-#endif

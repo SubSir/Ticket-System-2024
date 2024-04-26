@@ -1,6 +1,9 @@
+#ifndef SJTU_FILE_STORAGE_HPP
+#define SJTU_FILE_STORAGE_HPP
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <string>
 
 using namespace std;
 #ifndef SJTU_EXCEPTIONS_HPP
@@ -1258,16 +1261,18 @@ public:
   vector<T *> replace_key;
   // int pos[5000];
   vector<int> pos;
-  BPT() {
+  std::string filename;
+  BPT(const std::string &filename = "") {
+    this->filename = filename;
     root = nullptr;
-    ifstream file2("BPT");
+    ifstream file2("BPT" + filename);
     if (!file2.good()) {
-      file.open("BPT", ios::out);
+      file.open("BPT" + filename, ios::out);
       file.close();
-      file.open("BPT", ios::in | ios::out);
+      file.open("BPT" + filename, ios::in | ios::out);
     } else {
-      file.open("BPT", ios::in | ios::out);
-      binfile.open("bin", ios::in);
+      file.open("BPT" + filename, ios::in | ios::out);
+      binfile.open("bin" + filename, ios::in);
       rubbish *tmp = nullptr;
       int pos;
       while (file2 >> pos) {
@@ -1288,7 +1293,7 @@ public:
   }
   ~BPT() {
     file.close();
-    binfile.open("bin", ios::out);
+    binfile.open("bin" + filename, ios::out);
     rubbish *tmp = _head;
     while (tmp != nullptr) {
       binfile << tmp->pos << ' ';
@@ -1940,3 +1945,4 @@ public:
     }
   }
 };
+#endif

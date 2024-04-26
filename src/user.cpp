@@ -1,6 +1,4 @@
-#ifndef USER_CPP
-#define USER_CPP
-#include "time.cpp"
+#include "time.hpp"
 #include <cstring>
 #include <iostream>
 #include <ostream>
@@ -73,4 +71,3 @@ bool modify_profile(User *user, const std::string &p, const std::string &n,
             << user->privilege << '\n';
   return true;
 }
-#endif

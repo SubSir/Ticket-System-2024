@@ -1,5 +1,5 @@
-#ifndef TIME_CPP
-#define TIME_CPP
+#ifndef TIME_HPP
+#define TIME_HPP
 #include <iomanip>
 #include <iostream>
 struct Time {
