@@ -1,3 +1,5 @@
+#ifndef TIME_CPP
+#define TIME_CPP
 #include <iomanip>
 #include <iostream>
 struct Time {
@@ -37,3 +39,4 @@ struct Time {
     return os;
   }
 };
+#endif

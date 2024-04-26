@@ -1,3 +1,5 @@
+#ifndef TRAIN_CPP
+#define TRAIN_CPP
 #include "time.cpp"
 #include <cstring>
 #include <iostream>
@@ -43,6 +45,30 @@ struct Train {
   Time stopoverTimes[101];
   Time saleDate[2];
   char type[2] = {};
+};
+struct Order {
+  char username[21] = {};
+  char trainID[21] = {};
+  char from[31] = {};
+  Time startTime;
+  char to[31] = {};
+  Time arriveTime;
+  int price = 0;
+  int num = 0;
+  int status = 0;
+  friend std::ostream &operator<<(std::ostream &os, const Order &order) {
+    if (order.status == 1) {
+      os << "[success] ";
+    } else if (order.status == 2) {
+      os << "[pending] ";
+    } else {
+      os << "[refunded] ";
+    }
+    os << order.trainID << ' ' << order.from << ' ' << order.startTime << " -> "
+       << order.to << ' ' << order.arriveTime << ' ' << order.price << ' '
+       << order.num << '\n';
+    return os;
+  }
 };
 Train *add_train(const std::string &i, int n, int m, const std::string &s,
                  const std::string p, const std::string &x,
@@ -123,3 +149,46 @@ void query_train(Train *train) {
     std::cout << '\n';
   }
 }
+Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
+                  const std::string &d, const std::string &f,
+                  const std::string &t, int n, bool p) {
+  int pos = 0;
+  for (int i = 0; i < 100; i++) {
+    if (strcmp(train.stations[i], f.c_str()) == 0) {
+      pos = i;
+      break;
+    }
+  }
+  bool flag = false;
+  for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
+    if (train.seatNum[i] < n) {
+      flag = true;
+      break;
+    }
+  }
+  if (flag and !p)
+    return nullptr;
+  int price = 0;
+  for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
+    price += train.prices[i];
+    train.seatNum[i] -= n;
+  }
+  Order *order = new Order();
+  strcpy(order->username, u.c_str());
+  strcpy(order->trainID, i.c_str());
+  order->startTime = train.startTime;
+  strcpy(order->from, f.c_str());
+  strcpy(order->to, t.c_str());
+  order->arriveTime = train.startTime;
+  for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
+    order->arriveTime += train.travelTimes[i];
+  }
+  order->price = price;
+  order->num = n;
+  if (!flag)
+    order->status = 1;
+  else
+    order->status = 2;
+  return order;
+}
+#endif

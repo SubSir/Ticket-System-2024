@@ -1,5 +1,9 @@
+#ifndef USER_CPP
+#define USER_CPP
+#include "time.cpp"
 #include <cstring>
 #include <iostream>
+#include <ostream>
 #include <regex>
 #include <string>
 bool valid_username(const std::string &u) {
@@ -69,3 +73,4 @@ bool modify_profile(User *user, const std::string &p, const std::string &n,
             << user->privilege << '\n';
   return true;
 }
+#endif
