@@ -1,3 +1,4 @@
+#include "user.hpp"
 #include "time.hpp"
 #include <cstring>
 #include <iostream>
@@ -27,13 +28,7 @@ bool valid_name(const std::string &n) {
   return std::regex_match(n, pattern);
 }
 bool valid_privilege(int g) { return g >= 0 && g <= 10; }
-struct User {
-  char username[21] = {};
-  char password[31] = {};
-  char name[16] = {};
-  char mail[31] = {};
-  int privilege = 0;
-};
+
 User *add_user(const std::string &u, const std::string &p, const std::string &n,
                const std::string &m, int g) {
   if (!valid_username(u) || !valid_password(p) || !valid_name(n) ||
@@ -57,7 +52,8 @@ void query_profile(User *user) {
 }
 bool modify_profile(User *user, const std::string &p, const std::string &n,
                     const std::string &m, int g) {
-  if (!valid_password(p) || !valid_name(n) || !valid_privilege(g))
+  if ((!valid_password(p) and p.length() > 0) ||
+      (!valid_name(n) and n.length() > 0) || (!valid_privilege(g) and g >= 0))
     return false;
   if (p.length() > 0)
     strcpy(user->password, p.c_str());

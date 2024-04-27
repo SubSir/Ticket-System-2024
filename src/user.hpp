@@ -1,6 +1,7 @@
 #ifndef USER_HPP
 #define USER_HPP
 
+#include <cstring>
 #include <string>
 
 bool valid_username(const std::string &u);
@@ -14,6 +15,21 @@ struct User {
   char name[16] = {};
   char mail[31] = {};
   int privilege = 0;
+  bool operator<(const User &rhs) {
+    int username_cmp = std::strcmp(username, rhs.username);
+    if (username_cmp < 0) {
+      return true;
+    } else if (username_cmp > 0) {
+      return false;
+    }
+    int password_cmp = std::strcmp(password, rhs.password);
+    if (password_cmp < 0) {
+      return true;
+    } else {
+      return false;
+    }
+    return false;
+  }
 };
 
 User *add_user(const std::string &u, const std::string &p, const std::string &n,

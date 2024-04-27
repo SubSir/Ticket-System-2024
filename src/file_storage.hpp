@@ -1874,10 +1874,10 @@ public:
       delete replace_key[i];
     }
   }
-  void find(T &vmin, T &vmax) {
+  vector<T> find(T &vmin, T &vmax) {
+    vector<T> ans;
     if (root == nullptr) {
-      cout << "null\n";
-      return;
+      return ans;
     }
     node *tmp = nullptr;
     read(0, tmp);
@@ -1898,9 +1898,8 @@ public:
     }
     while (tmp->key[tmp->size - 1] < vmin) {
       if (tmp->next == -1) {
-        cout << "null\n";
         delete tmp;
-        return;
+        return ans;
       }
       int t = tmp->next;
       delete tmp;
@@ -1915,12 +1914,11 @@ public:
         i = mid + 1;
     }
     if (i == tmp->size or tmp->key[i] > vmax or tmp->key[i] < vmin) {
-      cout << "null\n";
       delete tmp;
-      return;
+      return ans;
     }
     while (tmp->key[i] <= vmax) {
-      cout << tmp->key[i].data << ' ';
+      ans.push_back(tmp->key[i]);
       i++;
       if (i == tmp->size) {
         if (tmp->next == -1)
@@ -1932,7 +1930,7 @@ public:
       }
     }
     delete tmp;
-    cout << '\n';
+    return ans;
   }
   void print(int pos) {
     node *t = nullptr;
