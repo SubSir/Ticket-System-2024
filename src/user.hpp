@@ -15,7 +15,7 @@ struct User {
   char name[16] = {};
   char mail[31] = {};
   int privilege = 0;
-  bool operator<(const User &rhs) {
+  bool operator<(const User &rhs) const {
     int username_cmp = std::strcmp(username, rhs.username);
     if (username_cmp < 0) {
       return true;
@@ -29,6 +29,12 @@ struct User {
       return false;
     }
     return false;
+  }
+  bool operator>(const User &rhs) const { return rhs < *this; }
+  bool operator>=(const User &rhs) const { return !(*this < rhs); }
+  bool operator<=(const User &rhs) const { return !(rhs < *this); }
+  bool operator!=(const User &rhs) const {
+    return (*this < rhs) or (rhs < *this);
   }
 };
 
