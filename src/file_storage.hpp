@@ -1969,6 +1969,52 @@ public:
     delete tmp;
     return ans;
   }
+  bool find_first(T &vmin, T &vmax, T &ans) {
+    if (root == nullptr) {
+      return false;
+    }
+    node *tmp = nullptr;
+    read(0, tmp);
+    while (!tmp->is_leaf) {
+      int i = 0, r = tmp->size, mid;
+      while (i < r) {
+        mid = (i + r) / 2;
+        if (tmp->key[mid] >= vmin)
+          r = mid;
+        else
+          i = mid + 1;
+      }
+      if (i > 0)
+        i--;
+      int t = tmp->son[i];
+      delete tmp;
+      read(t, tmp);
+    }
+    while (tmp->key[tmp->size - 1] < vmin) {
+      if (tmp->next == -1) {
+        delete tmp;
+        return false;
+      }
+      int t = tmp->next;
+      delete tmp;
+      read(t, tmp);
+    }
+    int i = 0, r = tmp->size, mid;
+    while (i < r) {
+      mid = (i + r) / 2;
+      if (tmp->key[mid] >= vmin)
+        r = mid;
+      else
+        i = mid + 1;
+    }
+    if (i == tmp->size or tmp->key[i] > vmax or tmp->key[i] < vmin) {
+      delete tmp;
+      return false;
+    }
+    ans = tmp->key[i];
+    delete tmp;
+    return true;
+  }
   void print(int pos) {
     node *t = nullptr;
     read(pos, t);

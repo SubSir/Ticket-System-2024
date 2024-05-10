@@ -188,3 +188,31 @@ bool costcmp(const DemoTrain &a, const DemoTrain &b) {
   }
   return a.num > b.num;
 }
+bool timecmp2(const DemoTrain2 &a, const DemoTrain2 &b) {
+  Time t1 = a.startTime + b.endTime2;
+  Time t2 = a.endTime + b.startTime2;
+  if (t1 < t2) {
+    return true;
+  }
+  if (t1 > t2) {
+    return false;
+  }
+  return a.prices < b.prices;
+}
+bool costcmp2(const DemoTrain2 &a, const DemoTrain2 &b) {
+  if (a.prices < b.prices) {
+    return true;
+  }
+  if (a.prices > b.prices) {
+    return false;
+  }
+  Time t1 = a.startTime + a.endTime2;
+  Time t2 = b.startTime + b.endTime2;
+  if (t1 < t2) {
+    return true;
+  }
+  if (t1 > t2) {
+    return false;
+  }
+  return a.num > b.num;
+}

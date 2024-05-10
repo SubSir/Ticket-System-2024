@@ -203,22 +203,51 @@ struct DemoTrain {
     return (*this < rhs) or (rhs < *this);
   }
 };
+// 我不能确保你的operator一定正确
+struct DemoTrain2 {
+  char trainID[21] = {};
+  int prices = 0;
+  int num = 0;
+  int price1 = 0;
+  int num1 = 0;
+  int price2 = 0;
+  int num2 = 0;
+  Time startTime;
+  Time startTime2;
+  Time endTime;
+  Time endTime2;
+  char transfer_locate[31] = {};
+  bool operator<(const DemoTrain2 &rhs) const {
+    if (startTime < rhs.startTime) {
+      return true;
+    } else if (startTime == rhs.startTime) {
+      if (endTime < rhs.endTime) {
+        return true;
+      } else if (endTime == rhs.endTime) {
+        return prices < rhs.prices;
+      }
+    }
+    return false;
+  }
+  bool operator>(const DemoTrain2 &rhs) const { return rhs < *this; }
+  bool operator>=(const DemoTrain2 &rhs) const { return !(*this < rhs); }
+  bool operator<=(const DemoTrain2 &rhs) const { return !(rhs < *this); }
+  bool operator!=(const DemoTrain2 &rhs) const {
+    return (*this < rhs) or (rhs < *this);
+  }
+};
 struct DateLocation_Train {
   Time date;
   char to[31];
   char trainID[21];
   bool operator<(const DateLocation_Train &rhs) const {
-    if (date.month < rhs.date.month) {
+    if (std::strcmp(to, rhs.to) < 0) {
       return true;
-    } else if (date.month == rhs.date.month) {
-      if (date.day < rhs.date.day) {
+    } else if (std::strcmp(to, rhs.to) == 0) {
+      if (date.month < rhs.date.month) {
         return true;
-      } else if (date.day == rhs.date.day) {
-        if (std::strcmp(to, rhs.to) < 0) {
-          return true;
-        } else if (std::strcmp(to, rhs.to) == 0) {
-          return std::strcmp(trainID, rhs.trainID) < 0;
-        }
+      } else if (date.month == rhs.date.month) {
+        return date.day < rhs.date.day;
       }
     }
     return false;
@@ -234,6 +263,7 @@ struct DateLocation_Train {
     return (*this < rhs) or (rhs < *this);
   }
 };
+
 Train *add_train(const std::string &i, int n, int m, const std::string &s,
                  const std::string p, const std::string &x,
                  const std::string &t, const std::string &o,
@@ -245,5 +275,7 @@ Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
                   const std::string &d, const std::string &f,
                   const std::string &t, int n, bool p);
 bool timecmp(const DemoTrain &a, const DemoTrain &b);
+bool timecmp2(const DemoTrain2 &a, const DemoTrain2 &b);
 bool costcmp(const DemoTrain &a, const DemoTrain &b);
+bool costcmp2(const DemoTrain2 &a, const DemoTrain2 &b);
 #endif
