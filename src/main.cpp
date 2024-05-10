@@ -474,7 +474,6 @@ int main() {
       sjtu::vector<DateLocation_Train> res =
           date_location_train_table->find(query_dlt, query_dlt_max);
       sjtu::vector<DemoTrain> res3;
-
       for (int i = 0; i < res.size(); i++) {
         Train query_train, query_train_max;
         strcpy(query_train.trainID, res[i].trainID);
@@ -536,6 +535,46 @@ int main() {
              << " -> " << t << res3[0].endTime << ' ' << res3[0].prices << ' '
              << res3[0].num << '\n';
       }
+    } else if (command == "query_transfer") {
+      std::string line;
+      std::getline(std::cin, line);
+      std::istringstream iss(line);
+      std::string s, t, d, p;
+      int cnt = 0;
+      while (getline(iss, in, ' ')) {
+        if (in == "-s") {
+          cnt++;
+          getline(iss, s, ' ');
+        }
+        if (in == "-t") {
+          cnt++;
+          getline(iss, t, ' ');
+        }
+        if (in == "-d") {
+          cnt++;
+          getline(iss, d, ' ');
+        }
+        if (in == "-p") {
+          cnt++;
+          getline(iss, p, ' ');
+        }
+      }
+      // 未检查含有P但是cnt为3
+      if (cnt != 3 and cnt != 4) {
+        std::cout << "-1\n";
+        continue;
+      }
+      DateLocation_Train query_dlt, query_dlt_max;
+      Time time;
+      time.month = stoi(d.substr(0, 2));
+      time.day = stoi(d.substr(3, 2));
+      strcpy(query_dlt.to, t.c_str());
+      query_dlt.date = time;
+      strcpy(query_dlt_max.to, t.c_str());
+      query_dlt_max.date = time;
+      sjtu::vector<DateLocation_Train> res =
+          date_location_train_table->find(query_dlt, query_dlt_max);
+      sjtu::vector<DemoTrain> res3;
     }
   }
 }
