@@ -24,13 +24,15 @@ struct Train {
   char trainID[21];
   int stationNum;
   char stations[101][31];
-  int seatNum[101];
+  int seatNum[100][101];
+  int seatTotal;
   int prices[101];
   Time startTime;
   Time travelTimes[101];
   Time stopoverTimes[101];
   Time saleDate[2];
   char type[2];
+  bool operator<(const Train &rhs) const;
 };
 
 struct Order {
@@ -44,17 +46,31 @@ struct Order {
   int num;
   int status;
   friend std::ostream &operator<<(std::ostream &os, const Order &order);
+  bool operator<(const Order &rhs);
 };
-
+struct DemoTrain {
+  char trainID[21] = {};
+  int prices = 0;
+  int num = 0;
+  Time startTime;
+  Time endTime;
+};
+struct DateLocation_Train {
+  Time date;
+  char to[31];
+  char trainID[21];
+  bool operator<(const DateLocation_Train &rhs) const;
+};
 Train *add_train(const std::string &i, int n, int m, const std::string &s,
                  const std::string p, const std::string &x,
                  const std::string &t, const std::string &o,
                  const std::string &d, const std::string &y);
 
-void query_train(Train *train);
+void query_trains(Train *train, Time *date);
 
 Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
                   const std::string &d, const std::string &f,
                   const std::string &t, int n, bool p);
-
+bool timecmp(const DemoTrain &a, const DemoTrain &b);
+bool costcmp(const DemoTrain &a, const DemoTrain &b);
 #endif

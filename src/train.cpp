@@ -36,13 +36,79 @@ struct Train {
   char trainID[21] = {};
   int stationNum = 0;
   char stations[101][31] = {};
-  int seatNum[101] = {};
+  int seatTotal = 0;
+  int seatNum[100][101] = {}; // 你知道这很浪费
   int prices[101] = {};
   Time startTime;
   Time travelTimes[101];
   Time stopoverTimes[101];
   Time saleDate[2];
   char type[2] = {};
+  bool operator<(const Train &rhs) {
+    int trainID_cmp = std::strcmp(trainID, rhs.trainID);
+    if (trainID_cmp < 0) {
+      return true;
+    } else if (trainID_cmp > 0) {
+      return false;
+    }
+    if (stationNum < rhs.stationNum) {
+      return true;
+    } else if (stationNum > rhs.stationNum) {
+      return false;
+    }
+    for (int i = 0; i < stationNum; i++) {
+      int stations_cmp = std::strcmp(stations[i], rhs.stations[i]);
+      if (stations_cmp < 0) {
+        return true;
+      } else if (stations_cmp > 0) {
+        return false;
+      }
+    }
+    if (seatTotal < rhs.seatTotal) {
+      return true;
+    } else if (seatTotal > rhs.seatTotal) {
+      return false;
+    }
+    for (int i = 0; i < stationNum; i++) {
+      if (prices[i] < rhs.prices[i]) {
+        return true;
+      } else if (prices[i] > rhs.prices[i]) {
+        return false;
+      }
+    }
+    if (startTime < rhs.startTime) {
+      return true;
+    } else if (startTime == rhs.startTime) {
+      for (int i = 0; i < stationNum; i++) {
+        if (travelTimes[i] < rhs.travelTimes[i]) {
+          return true;
+        } else if (travelTimes[i] > rhs.travelTimes[i]) {
+          return false;
+        }
+      }
+      for (int i = 0; i < stationNum; i++) {
+        if (stopoverTimes[i] < rhs.stopoverTimes[i]) {
+          return true;
+        } else if (stopoverTimes[i] > rhs.stopoverTimes[i]) {
+          return false;
+        }
+      }
+      for (int i = 0; i < 2; i++) {
+        if (saleDate[i] < rhs.saleDate[i]) {
+          return true;
+        } else if (saleDate[i] > rhs.saleDate[i]) {
+          return false;
+        }
+      }
+      int type_cmp = std::strcmp(type, rhs.type);
+      if (type_cmp < 0) {
+        return true;
+      } else if (type_cmp > 0) {
+        return false;
+      }
+    }
+    return false;
+  }
 };
 struct Order {
   char username[21] = {};
@@ -67,6 +133,78 @@ struct Order {
        << order.num << '\n';
     return os;
   }
+  bool operator<(const Order &rhs) {
+    int username_cmp = std::strcmp(username, rhs.username);
+    if (username_cmp < 0) {
+      return true;
+    } else if (username_cmp > 0) {
+      return false;
+    }
+    int trainID_cmp = std::strcmp(trainID, rhs.trainID);
+    if (trainID_cmp < 0) {
+      return true;
+    } else if (trainID_cmp > 0) {
+      return false;
+    }
+    int from_cmp = std::strcmp(from, rhs.from);
+    if (from_cmp < 0) {
+      return true;
+    } else if (from_cmp > 0) {
+      return false;
+    }
+    if (startTime < rhs.startTime) {
+      return true;
+    } else if (startTime == rhs.startTime) {
+      int to_cmp = std::strcmp(to, rhs.to);
+      if (to_cmp < 0) {
+        return true;
+      } else if (to_cmp > 0) {
+        return false;
+      }
+      if (arriveTime < rhs.arriveTime) {
+        return true;
+      } else if (arriveTime == rhs.arriveTime) {
+        if (price < rhs.price) {
+          return true;
+        } else if (price == rhs.price) {
+          if (num < rhs.num) {
+            return true;
+          } else if (num == rhs.num) {
+            return status < rhs.status;
+          }
+        }
+      }
+    }
+    return false;
+  }
+};
+struct DemoTrain {
+  char trainID[21] = {};
+  int prices = 0;
+  int num = 0;
+  Time startTime;
+  Time endTime;
+};
+struct DateLocation_Train {
+  Time date;
+  char to[31];
+  char trainID[21];
+  bool operator<(const DateLocation_Train &rhs) const {
+    if (date.month < rhs.date.month) {
+      return true;
+    } else if (date.month == rhs.date.month) {
+      if (date.day < rhs.date.day) {
+        return true;
+      } else if (date.day == rhs.date.day) {
+        if (std::strcmp(to, rhs.to) < 0) {
+          return true;
+        } else if (std::strcmp(to, rhs.to) == 0) {
+          return std::strcmp(trainID, rhs.trainID) < 0;
+        }
+      }
+    }
+    return false;
+  }
 };
 Train *add_train(const std::string &i, int n, int m, const std::string &s,
                  const std::string p, const std::string &x,
@@ -78,9 +216,7 @@ Train *add_train(const std::string &i, int n, int m, const std::string &s,
   Train *train = new Train();
   strcpy(train->trainID, i.c_str());
   train->stationNum = n;
-  for (int i = 0; i < n; i++) {
-    train->seatNum[i] = m;
-  }
+  train->seatTotal = m;
   std::istringstream iss(s);
   std::string token;
   int pos = 0;
@@ -118,9 +254,9 @@ Train *add_train(const std::string &i, int n, int m, const std::string &s,
   strcpy(train->type, t.c_str());
   return train;
 }
-void query_train(Train *train) {
+void query_trains(Train *train, Time *date) {
   std::cout << train->trainID << ' ' << train->type << '\n';
-  Time time = train->startTime;
+  Time time = train->startTime + *date;
   int price = 0;
   for (int i = 0; i < train->stationNum; i++) {
     std::cout << train->stations[i] << ' ';
@@ -150,6 +286,9 @@ void query_train(Train *train) {
 Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
                   const std::string &d, const std::string &f,
                   const std::string &t, int n, bool p) {
+  if (train.release == false) {
+    return nullptr;
+  }
   int pos = 0;
   for (int i = 0; i < 100; i++) {
     if (strcmp(train.stations[i], f.c_str()) == 0) {
@@ -158,8 +297,11 @@ Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
     }
   }
   bool flag = false;
+  // 31天修正未进行
+  int date = (std::stoi(d.substr(0, 2)) - train.startTime.month) * 30 +
+             std::stoi(d.substr(3, 2)) - train.startTime.day;
   for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
-    if (train.seatNum[i] < n) {
+    if (train.seatNum[date][i] + n > train.seatTotal) {
       flag = true;
       break;
     }
@@ -169,7 +311,7 @@ Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
   int price = 0;
   for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
     price += train.prices[i];
-    train.seatNum[i] -= n;
+    train.seatNum[date][i] += n;
   }
   Order *order = new Order();
   strcpy(order->username, u.c_str());
@@ -188,4 +330,32 @@ Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
   else
     order->status = 2;
   return order;
+}
+bool timecmp(const DemoTrain &a, const DemoTrain &b) {
+  Time t1 = a.startTime + b.endTime;
+  Time t2 = a.endTime + b.startTime;
+  if (t1 < t2) {
+    return true;
+  }
+  if (t1 > t2) {
+    return false;
+  }
+  return a.prices < b.prices;
+}
+bool costcmp(const DemoTrain &a, const DemoTrain &b) {
+  if (a.prices < b.prices) {
+    return true;
+  }
+  if (a.prices > b.prices) {
+    return false;
+  }
+  Time t1 = a.startTime + a.endTime;
+  Time t2 = b.startTime + b.endTime;
+  if (t1 < t2) {
+    return true;
+  }
+  if (t1 > t2) {
+    return false;
+  }
+  return a.num > b.num;
 }

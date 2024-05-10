@@ -506,6 +506,43 @@ public:
       desize();
     }
   }
+  template <typename Compare>
+  void merge(T **arr, int left, int mid, int right, T **tmp, Compare cmp) {
+    int i = left, j = mid + 1, k = left;
+    while (i <= mid && j <= right) {
+      if (cmp(*arr[i], *arr[j])) {
+        tmp[k++] = arr[i++];
+      } else {
+        tmp[k++] = arr[j++];
+      }
+    }
+    while (i <= mid) {
+      tmp[k++] = arr[i++];
+    }
+    while (j <= right) {
+      tmp[k++] = arr[j++];
+    }
+    for (int p = left; p <= right; p++) {
+      arr[p] = tmp[p];
+    }
+  }
+  template <typename Compare>
+
+  void mergeSort(T **arr, int left, int right, T **tmp, Compare cmp) {
+    if (left >= right) {
+      return;
+    }
+    int mid = left + (right - left) / 2;
+    mergeSort(arr, left, mid, tmp, cmp);
+    mergeSort(arr, mid + 1, right, tmp, cmp);
+    merge(arr, left, mid, right, tmp, cmp);
+  }
+
+  template <typename Compare> void sort(Compare cmp) {
+    T **tmp = new T *[capacity];
+    mergeSort(data, 0, current_size - 1, tmp, cmp);
+    delete[] tmp;
+  }
 };
 
 } // namespace sjtu
