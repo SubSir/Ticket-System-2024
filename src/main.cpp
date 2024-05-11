@@ -11,9 +11,11 @@ using namespace std;
 char max_password[31];
 char max_trainid[21];
 Time max_time;
+int max_ind;
 BPT<User> *user_table;
 BPT<Train> *train_table;
 BPT<DateLocation_Train> *date_location_train_table;
+BPT<Order> *order_table;
 sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t) {
   DateLocation_Train query_dlt, query_dlt_max;
   strcpy(query_dlt.to, t.c_str());
@@ -133,7 +135,7 @@ sjtu::vector<DemoTrain> _query_train(string &s, Time &old_time, string &t,
   }
   return res3;
 }
-sjtu::vector<DemoTrain2> query_transfer(string &s, Time &time, string &t) {
+sjtu::vector<DemoTrain2> _query_transfer(string &s, Time &time, string &t) {
   DateLocation_Train query_dlt, query_dlt_max;
   strcpy(query_dlt.to, t.c_str());
   query_dlt.date = time;
@@ -206,36 +208,55 @@ int main() {
   max_time.day = 29;
   max_time.hour = 23;
   max_time.minute = 59;
-  BPT<User> *user_table = new BPT<User>("user");
-  BPT<Train> *train_table = new BPT<Train>("train");
-  BPT<DateLocation_Train> *date_location_train_table =
+  max_ind = 0x7fffffff;
+  user_table = new BPT<User>("user");
+  train_table = new BPT<Train>("train");
+  date_location_train_table =
       new BPT<DateLocation_Train>("date_location_train");
+  order_table = new BPT<Order>("order");
   sjtu::map<std::string, User> user_pool;
   std::string i, s, p, x, t, o, d, y, in;
+  ifstream ff("root");
+  if (ff) {
+    ff.close();
+  } else {
+    fstream fout("root", ios::out);
+    fout.close();
+    ff.close();
+  }
   fstream fin("root", ios::in | ios::out);
   int n, m;
+  string index, command;
+  int ind = -1;
   while (true) {
-    string command;
+    cin >> index;
+    ind = stoi(index.substr(1, index.size() - 1));
     cin >> command;
     if (command == "exit") {
       cout << "bye" << '\n';
       delete user_table;
       delete train_table;
       delete date_location_train_table;
+      delete order_table;
       break;
     } else if (command == "clear") {
       delete user_table;
       delete train_table;
       delete date_location_train_table;
+      delete order_table;
       std::ofstream fout("BPTuser", std::ios::trunc);
       fout.close();
       fout.open("BPTtrain", std::ios::trunc);
       fout.close();
       fout.open("BPTdate_location_train", std::ios::trunc);
       fout.close();
+      fout.open("BPTorder", std::ios::trunc);
+      fout.close();
       fout.open("binuser", std::ios::trunc);
       fout.close();
       fout.open("bintrain", std::ios::trunc);
+      fout.close();
+      fout.open("binorder", std::ios::trunc);
       fout.close();
       fout.open("bindate_location_train", std::ios::trunc);
       fout.close();
@@ -247,6 +268,7 @@ int main() {
       train_table = new BPT<Train>("train");
       date_location_train_table =
           new BPT<DateLocation_Train>("date_location_train");
+      order_table = new BPT<Order>("order");
       user_pool.clear();
     } else if (command == "add_user") {
       std::string line;
@@ -633,7 +655,7 @@ int main() {
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
-      std::string s, t, d, p;
+      std::string s, t, d, p = "time";
       int cnt = 0;
       while (getline(iss, in, ' ')) {
         if (in == "-s") {
@@ -649,12 +671,10 @@ int main() {
           getline(iss, d, ' ');
         }
         if (in == "-p") {
-          cnt++;
           getline(iss, p, ' ');
         }
       }
-      // 未检查含有P但是cnt为3
-      if (cnt != 3 and cnt != 4) {
+      if (cnt != 3) {
         std::cout << "-1\n";
         continue;
       }
@@ -677,7 +697,7 @@ int main() {
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
-      std::string s, t, d, p;
+      std::string s, t, d, p = "time";
       int cnt = 0;
       while (getline(iss, in, ' ')) {
         if (in == "-s") {
@@ -693,19 +713,17 @@ int main() {
           getline(iss, d, ' ');
         }
         if (in == "-p") {
-          cnt++;
           getline(iss, p, ' ');
         }
       }
-      // 未检查含有P但是cnt为3
-      if (cnt != 3 and cnt != 4) {
+      if (cnt != 3) {
         std::cout << "-1\n";
         continue;
       }
       Time time;
       time.month = stoi(d.substr(0, 2));
       time.day = stoi(d.substr(3, 2));
-      sjtu::vector<DemoTrain2> res3 = query_transfer(s, time, t);
+      sjtu::vector<DemoTrain2> res3 = _query_transfer(s, time, t);
       if (res3.empty()) {
         cout << "0\n";
         continue;
@@ -721,6 +739,150 @@ int main() {
       cout << res3[0].trainID << ' ' << res3[0].transfer_locate << ' '
            << res3[0].startTime2 << " -> " << t << res3[0].endTime2 << ' '
            << res3[0].price2 << ' ' << res3[0].num2 << '\n';
+    } else if (command == "buy_ticket") {
+      std::string line;
+      std::getline(std::cin, line);
+      std::istringstream iss(line);
+      std::string u, i, d, s, f, t;
+      bool q = false;
+      int n = -1;
+      int cnt = 0;
+      while (getline(iss, in, ' ')) {
+        if (in == "-u") {
+          cnt++;
+          getline(iss, u, ' ');
+        }
+        if (in == "-i") {
+          cnt++;
+          getline(iss, i, ' ');
+        }
+        if (in == "-d") {
+          cnt++;
+          getline(iss, d, ' ');
+        }
+        if (in == "-n") {
+          cnt++;
+          getline(iss, s, ' ');
+          n = stoi(s);
+        }
+        if (in == "-f") {
+          cnt++;
+          getline(iss, f, ' ');
+        }
+        if (in == "-p") {
+          cnt++;
+          getline(iss, p, ' ');
+        }
+        if (in == "-q") {
+          getline(iss, s, ' ');
+          if (s == "true")
+            q = true;
+        }
+      }
+      if (cnt != 6) {
+        std::cout << "-1\n";
+        continue;
+      }
+      if (user_pool.find(u) == user_pool.end()) {
+        std::cout << "-1\n";
+        continue;
+      }
+      Train query_train, query_train_max;
+      strcpy(query_train.trainID, i.c_str());
+      strcpy(query_train_max.trainID, i.c_str());
+      strcpy(query_train_max.type, max_password);
+      sjtu::vector<Train> res = train_table->find(query_train, query_train_max);
+      if (res.empty()) {
+        std::cout << "-1\n";
+        continue;
+      }
+      assert(res.size() == 1);
+      if (res[0].release) {
+        std::cout << "-1\n";
+        continue;
+      }
+      Order *order = buy_ticket(res[0], u, i, d, f, t, n, q);
+      if (order == nullptr) {
+        std::cout << "-1\n";
+        continue;
+      }
+      order->index = ind;
+      if (order->status == 1) {
+        cout << order->price << '\n';
+      } else if (order->status == 2) {
+        cout << "queue\n";
+      } else {
+        cout << "-1\n";
+      }
+      order_table->insert(*order);
+      delete order;
+    } else if (command == "query_order") {
+      std::string line;
+      std::getline(std::cin, line);
+      std::istringstream iss(line);
+      std::string u;
+      int cnt = 0;
+      while (getline(iss, in, ' ')) {
+        if (in == "-u") {
+          cnt++;
+          getline(iss, u, ' ');
+        }
+      }
+      if (cnt != 1) {
+        std::cout << "-1\n";
+        continue;
+      }
+      if (user_pool.find(u) == user_pool.end()) {
+        std::cout << "-1\n";
+        continue;
+      }
+      Order query_order, query_order_max;
+      strcpy(query_order.username, u.c_str());
+      strcpy(query_order_max.username, u.c_str());
+      query_order_max.index = max_ind;
+      sjtu::vector<Order> res = order_table->find(query_order, query_order_max);
+      cout << res.size() << '\n';
+      for (int i = 0; i < res.size(); i++) {
+        cout << res[i] << '\n';
+      }
+    } else if (command == "refund_ticket") {
+      std::string line;
+      std::getline(std::cin, line);
+      std::istringstream iss(line);
+      std::string u, s;
+      int n = 1;
+      int cnt = 0;
+      while (getline(iss, in, ' ')) {
+        if (in == "-u") {
+          cnt++;
+          getline(iss, u, ' ');
+        }
+        if (in == "-n") {
+          getline(iss, s, ' ');
+          n = stoi(s);
+        }
+      }
+      if (cnt != 1) {
+        std::cout << "-1\n";
+        continue;
+      }
+      if (user_pool.find(u) == user_pool.end()) {
+        std::cout << "-1\n";
+        continue;
+      }
+      Order query_order, query_order_max;
+      strcpy(query_order.username, u.c_str());
+      strcpy(query_order_max.username, u.c_str());
+      query_order_max.index = max_ind;
+      sjtu::vector<Order> res = order_table->find(query_order, query_order_max);
+      if (n > res.size()) {
+        std::cout << "-1\n";
+        continue;
+      }
+      if (res[n - 1].status == 3) {
+        std::cout << "-1\n";
+        continue;
+      }
     }
   }
 }

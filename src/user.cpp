@@ -6,7 +6,8 @@
 #include <regex>
 #include <string>
 bool valid_username(const std::string &u) {
-  if (u.length() == 0 || u.length() > 20 || u[0] > 'z' || u[0] < 'a')
+  if (u.length() == 0 || u.length() > 20 || u[0] > 'z' ||
+      (u[0] < 'a' && (u[0] < 'A' || u[0] > 'Z')))
     return false;
   for (char c : u) {
     if (c != '_' and !isalnum(c))
@@ -25,7 +26,8 @@ bool valid_password(const std::string &p) {
 }
 bool valid_name(const std::string &n) {
   std::regex pattern("^[\u4e00-\u9fa5]{2,5}$");
-  return std::regex_match(n, pattern);
+  bool t = std::regex_match(n, pattern);
+  return t;
 }
 bool valid_privilege(int g) { return g >= 0 && g <= 10; }
 

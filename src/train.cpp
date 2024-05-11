@@ -6,7 +6,8 @@
 #include <sstream>
 #include <string>
 bool valid_trainID(const std::string &u) {
-  if (u.length() == 0 || u.length() > 20 || u[0] > 'z' || u[0] < 'a')
+  if (u.length() == 0 || u.length() > 20 || u[0] > 'z' ||
+      (u[0] < 'a' && (u[0] < 'A' || u[0] > 'Z')))
     return false;
   for (char c : u) {
     if (c != '_' and !isalnum(c))

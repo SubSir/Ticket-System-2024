@@ -105,6 +105,7 @@ struct Train {
   }
 };
 struct Order {
+  int index = 0;
   char username[21] = {};
   char trainID[21] = {};
   char from[31] = {};
@@ -132,6 +133,11 @@ struct Order {
     if (username_cmp < 0) {
       return true;
     } else if (username_cmp > 0) {
+      return false;
+    }
+    if (index < rhs.index) {
+      return true;
+    } else if (index > rhs.index) {
       return false;
     }
     int trainID_cmp = std::strcmp(trainID, rhs.trainID);
