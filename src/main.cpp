@@ -15,7 +15,9 @@ int max_ind;
 BPT<User> *user_table;
 BPT<Train> *train_table;
 BPT<DateLocation_Train> *date_location_train_table;
-BPT<Order> *order_table;
+BPT<DemoOrder> *order_table;
+BPT<DemoOrder2> *waiting_list;
+MemoryRiver<Order> *order_river;
 sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t) {
   DateLocation_Train query_dlt, query_dlt_max;
   strcpy(query_dlt.to, t.c_str());
@@ -68,7 +70,7 @@ sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t) {
           min(valseatNum, res2[0].seatTotal - res2[0].seatNum[index][j]);
       price += res2[0].prices[j];
       time3 += res2[0].travelTimes[j];
-      if (j > 0) {
+      if (j > begin) {
         time3 += res2[0].stopoverTimes[j - 1];
       }
     }
@@ -129,7 +131,7 @@ sjtu::vector<DemoTrain> _query_train(string &s, Time &old_time, string &t,
     valseatNum = min(valseatNum, res2[0].seatTotal - res2[0].seatNum[index][j]);
     price += res2[0].prices[j];
     time3 += res2[0].travelTimes[j];
-    if (j > 0) {
+    if (j > begin) {
       time3 += res2[0].stopoverTimes[j - 1];
     }
   }
@@ -195,7 +197,7 @@ sjtu::vector<DemoTrain2> _query_transfer(string &s, Time &time, string &t) {
         }
       }
       time3 += res2[j].travelTimes[j];
-      if (j > 0)
+      if (j > begin)
         time3 += res2[j].stopoverTimes[j - 1];
     }
   }
@@ -213,7 +215,9 @@ int main() {
   train_table = new BPT<Train>("train");
   date_location_train_table =
       new BPT<DateLocation_Train>("date_location_train");
-  order_table = new BPT<Order>("order");
+  order_table = new BPT<DemoOrder>("order");
+  waiting_list = new BPT<DemoOrder2>("waiting_list");
+  order_river = new MemoryRiver<Order>("order");
   sjtu::map<std::string, User> user_pool;
   std::string i, s, p, x, t, o, d, y, in;
   ifstream ff("root");
@@ -230,7 +234,6 @@ int main() {
   int ind = -1;
   while (true) {
     cin >> index;
-    ind = stoi(index.substr(1, index.size() - 1));
     cin >> command;
     if (command == "exit") {
       cout << "bye" << '\n';
@@ -238,12 +241,16 @@ int main() {
       delete train_table;
       delete date_location_train_table;
       delete order_table;
+      delete waiting_list;
+      delete order_river;
       break;
     } else if (command == "clear") {
       delete user_table;
       delete train_table;
       delete date_location_train_table;
       delete order_table;
+      delete waiting_list;
+      delete order_river;
       std::ofstream fout("BPTuser", std::ios::trunc);
       fout.close();
       fout.open("BPTtrain", std::ios::trunc);
@@ -251,6 +258,8 @@ int main() {
       fout.open("BPTdate_location_train", std::ios::trunc);
       fout.close();
       fout.open("BPTorder", std::ios::trunc);
+      fout.close();
+      fout.open("BPTwaiting_list", std::ios::trunc);
       fout.close();
       fout.open("binuser", std::ios::trunc);
       fout.close();
@@ -260,6 +269,10 @@ int main() {
       fout.close();
       fout.open("bindate_location_train", std::ios::trunc);
       fout.close();
+      fout.open("binwaiting_list", std::ios::trunc);
+      fout.close();
+      fout.open("orderriver", std::ios::trunc);
+      fout.close();
       fin.close();
       fout.open("root", std::ios::trunc);
       fout.close();
@@ -268,7 +281,9 @@ int main() {
       train_table = new BPT<Train>("train");
       date_location_train_table =
           new BPT<DateLocation_Train>("date_location_train");
-      order_table = new BPT<Order>("order");
+      order_table = new BPT<DemoOrder>("order");
+      waiting_list = new BPT<DemoOrder2>("waiting_list");
+      order_river = new MemoryRiver<Order>("order");
       user_pool.clear();
     } else if (command == "add_user") {
       std::string line;
@@ -814,7 +829,18 @@ int main() {
       } else {
         cout << "-1\n";
       }
-      order_table->insert(*order);
+      DemoOrder demo_order;
+      strcpy(demo_order.username, order->username);
+      demo_order.pos = order_river->write(*order);
+      order_table->insert(demo_order);
+      if (order->status == 2) {
+        DemoOrder2 demo_order2;
+        demo_order2.pos = demo_order.pos;
+        demo_order2.date = order->dat;
+        demo_order2.loc = order->loc;
+        demo_order2.n = n;
+        waiting_list->insert(demo_order2);
+      }
       delete order;
     } else if (command == "query_order") {
       std::string line;
@@ -836,14 +862,17 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      Order query_order, query_order_max;
+      DemoOrder query_order, query_order_max;
       strcpy(query_order.username, u.c_str());
       strcpy(query_order_max.username, u.c_str());
-      query_order_max.index = max_ind;
-      sjtu::vector<Order> res = order_table->find(query_order, query_order_max);
+      query_order_max.pos = max_ind;
+      sjtu::vector<DemoOrder> res =
+          order_table->find(query_order, query_order_max);
       cout << res.size() << '\n';
       for (int i = 0; i < res.size(); i++) {
-        cout << res[i] << '\n';
+        Order order;
+        order_river->read(order, res[i].pos);
+        cout << order << '\n';
       }
     } else if (command == "refund_ticket") {
       std::string line;
@@ -870,19 +899,34 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      Order query_order, query_order_max;
+      DemoOrder query_order, query_order_max;
       strcpy(query_order.username, u.c_str());
       strcpy(query_order_max.username, u.c_str());
-      query_order_max.index = max_ind;
-      sjtu::vector<Order> res = order_table->find(query_order, query_order_max);
+      query_order_max.pos = max_ind;
+      sjtu::vector<DemoOrder> res =
+          order_table->find(query_order, query_order_max);
       if (n > res.size()) {
         std::cout << "-1\n";
         continue;
       }
-      if (res[n - 1].status == 3) {
+      Order order;
+      order_river->read(order, res[n - 1].pos);
+      if (order.status == 3) {
         std::cout << "-1\n";
         continue;
       }
+      order.status = 3;
+      order_river->update(order, res[n - 1].pos);
+      DemoOrder2 query_order2, query_order2_max;
+      strcpy(query_order2.trainID, order.trainID);
+      strcpy(query_order2_max.trainID, order.trainID);
+      query_order2.date = order.dat;
+      query_order2_max.date = order.dat;
+      query_order2.loc = order.loc;
+      query_order2_max.loc = order.loc;
+      query_order2_max.pos = max_ind;
+      sjtu::vector<DemoOrder2> res2 =
+          waiting_list->find(query_order2, query_order2_max);
     }
   }
 }

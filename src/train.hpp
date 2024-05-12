@@ -112,6 +112,8 @@ struct Order {
   Time startTime;
   char to[31] = {};
   Time arriveTime;
+  int loc = 0;
+  int dat = 0;
   int price = 0;
   int num = 0;
   int status = 0;
@@ -129,15 +131,15 @@ struct Order {
     return os;
   }
   bool operator<(const Order &rhs) const {
+    if (index < rhs.index) {
+      return true;
+    } else if (index > rhs.index) {
+      return false;
+    }
     int username_cmp = std::strcmp(username, rhs.username);
     if (username_cmp < 0) {
       return true;
     } else if (username_cmp > 0) {
-      return false;
-    }
-    if (index < rhs.index) {
-      return true;
-    } else if (index > rhs.index) {
       return false;
     }
     int trainID_cmp = std::strcmp(trainID, rhs.trainID);
@@ -181,6 +183,67 @@ struct Order {
   bool operator>=(const Order &rhs) const { return !(*this < rhs); }
   bool operator<=(const Order &rhs) const { return !(rhs < *this); }
   bool operator!=(const Order &rhs) const {
+    return (*this < rhs) or (rhs < *this);
+  }
+};
+struct DemoOrder {
+  int pos = 0;
+  char username[21] = {};
+  bool operator<(const DemoOrder &rhs) const {
+    int username_cmp = std::strcmp(username, rhs.username);
+    if (username_cmp < 0) {
+      return true;
+    } else if (username_cmp > 0) {
+      return false;
+    }
+    if (pos < rhs.pos) {
+      return true;
+    } else if (pos > rhs.pos) {
+      return false;
+    }
+    return false;
+  }
+  bool operator>(const DemoOrder &rhs) const { return rhs < *this; }
+  bool operator>=(const DemoOrder &rhs) const { return !(*this < rhs); }
+  bool operator<=(const DemoOrder &rhs) const { return !(rhs < *this); }
+  bool operator!=(const DemoOrder &rhs) const {
+    return (*this < rhs) or (rhs < *this);
+  }
+};
+struct DemoOrder2 {
+  int pos = 0;
+  char trainID[21] = {};
+  int date = 0;
+  int loc = 0;
+  int n = 0;
+  bool operator<(const DemoOrder2 &rhs) const {
+    int trainID_cmp = std::strcmp(trainID, rhs.trainID);
+    if (trainID_cmp < 0) {
+      return true;
+    } else if (trainID_cmp > 0) {
+      return false;
+    }
+    if (date < rhs.date) {
+      return true;
+    } else if (date > rhs.date) {
+      return false;
+    }
+    if (loc < rhs.loc) {
+      return true;
+    } else if (loc > rhs.loc) {
+      return false;
+    }
+    if (pos < rhs.pos) {
+      return true;
+    } else if (pos > rhs.pos) {
+      return false;
+    }
+    return false;
+  }
+  bool operator>(const DemoOrder2 &rhs) const { return rhs < *this; }
+  bool operator>=(const DemoOrder2 &rhs) const { return !(*this < rhs); }
+  bool operator<=(const DemoOrder2 &rhs) const { return !(rhs < *this); }
+  bool operator!=(const DemoOrder2 &rhs) const {
     return (*this < rhs) or (rhs < *this);
   }
 };

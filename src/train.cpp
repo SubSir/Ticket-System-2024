@@ -152,9 +152,13 @@ Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
   order->arriveTime = train.startTime;
   for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
     order->arriveTime += train.travelTimes[i];
+    if (i > pos)
+      order->arriveTime += train.stopoverTimes[i - 1];
   }
   order->price = price;
   order->num = n;
+  order->dat = date;
+  order->loc = pos;
   if (!flag)
     order->status = 1;
   else
