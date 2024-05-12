@@ -113,6 +113,7 @@ struct Order {
   char to[31] = {};
   Time arriveTime;
   int loc = 0;
+  int end_loc = 0;
   int dat = 0;
   int price = 0;
   int num = 0;
@@ -215,6 +216,7 @@ struct DemoOrder2 {
   char trainID[21] = {};
   int date = 0;
   int loc = 0;
+  int end_loc = 0;
   int n = 0;
   bool operator<(const DemoOrder2 &rhs) const {
     int trainID_cmp = std::strcmp(trainID, rhs.trainID);
@@ -343,6 +345,8 @@ void query_trains(Train *train, Time *date);
 Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
                   const std::string &d, const std::string &f,
                   const std::string &t, int n, bool p);
+Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
+                  int dat, int loc, int end_loc, int n, bool p);
 bool timecmp(const DemoTrain &a, const DemoTrain &b);
 bool timecmp2(const DemoTrain2 &a, const DemoTrain2 &b);
 bool costcmp(const DemoTrain &a, const DemoTrain &b);

@@ -120,16 +120,21 @@ Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
     return nullptr;
   }
   int pos = 0;
+  Time st = train.startTime + train.saleDate[0];
   for (int i = 0; i < 100; i++) {
     if (strcmp(train.stations[i], f.c_str()) == 0) {
       pos = i;
       break;
     }
+    st += train.travelTimes[i];
+    if (i > 0)
+      st += train.stopoverTimes[i - 1];
   }
+  // 是否会有traveltime的问题
   bool flag = false;
   // 31天修正未进行
-  int date = (std::stoi(d.substr(0, 2)) - train.startTime.month) * 30 +
-             std::stoi(d.substr(3, 2)) - train.startTime.day;
+  int date = (std::stoi(d.substr(0, 2)) - st.month) * 30 +
+             std::stoi(d.substr(3, 2)) - st.day;
   for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
     if (train.seatNum[date][i] + n > train.seatTotal) {
       flag = true;
@@ -141,8 +146,11 @@ Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
   int price = 0;
   for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
     price += train.prices[i];
-    train.seatNum[date][i] += n;
   }
+  if (!p)
+    for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
+      train.seatNum[date][i] += n;
+    }
   Order *order = new Order();
   strcpy(order->username, u.c_str());
   strcpy(order->trainID, i.c_str());
@@ -151,10 +159,66 @@ Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
   strcpy(order->to, t.c_str());
   order->arriveTime = train.startTime;
   for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
+    order->end_loc = i;
     order->arriveTime += train.travelTimes[i];
     if (i > pos)
       order->arriveTime += train.stopoverTimes[i - 1];
   }
+  order->end_loc++;
+  order->price = price;
+  order->num = n;
+  order->dat = date;
+  order->loc = pos;
+  if (!flag)
+    order->status = 1;
+  else
+    order->status = 2;
+  return order;
+}
+Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
+                  int dat, int loc, int end_loc, int n, bool p) {
+  if (train.release == false) {
+    return nullptr;
+  }
+  int pos = 0;
+  Time st = train.startTime + train.saleDate[0];
+  for (int i = 0; i <= loc; i++) {
+    st += train.travelTimes[i];
+    if (i > 0)
+      st += train.stopoverTimes[i - 1];
+  }
+  // 是否会有traveltime的问题
+  bool flag = false;
+  // 31天修正未进行
+  int date = dat;
+  for (int i = pos; i < end_loc; i++) {
+    if (train.seatNum[date][i] + n > train.seatTotal) {
+      flag = true;
+      break;
+    }
+  }
+  if (flag and !p)
+    return nullptr;
+  int price = 0;
+  for (int i = pos; i < end_loc; i++) {
+    price += train.prices[i];
+  }
+  if (!flag)
+    for (int i = pos; i < end_loc; i++) {
+      train.seatNum[date][i] += n;
+    }
+  Order *order = new Order();
+  strcpy(order->username, u.c_str());
+  strcpy(order->trainID, i.c_str());
+  order->startTime = train.startTime;
+  order->arriveTime = train.startTime;
+  for (int i = pos; i < end_loc; i++) {
+    order->end_loc = i;
+    order->arriveTime += train.travelTimes[i];
+    if (i > pos)
+      order->arriveTime += train.stopoverTimes[i - 1];
+  }
+  order->end_loc++;
   order->price = price;
   order->num = n;
   order->dat = date;

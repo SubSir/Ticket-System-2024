@@ -816,7 +816,9 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
+      train_table->erase(res[0]);
       Order *order = buy_ticket(res[0], u, i, d, f, t, n, q);
+      train_table->insert(res[0]);
       if (order == nullptr) {
         std::cout << "-1\n";
         continue;
@@ -838,6 +840,7 @@ int main() {
         demo_order2.pos = demo_order.pos;
         demo_order2.date = order->dat;
         demo_order2.loc = order->loc;
+        demo_order2.end_loc = order->end_loc;
         demo_order2.n = n;
         waiting_list->insert(demo_order2);
       }
@@ -925,8 +928,42 @@ int main() {
       query_order2.loc = order.loc;
       query_order2_max.loc = order.loc;
       query_order2_max.pos = max_ind;
-      sjtu::vector<DemoOrder2> res2 =
-          waiting_list->find(query_order2, query_order2_max);
+      Train query_train, query_train_max;
+      strcpy(query_train.trainID, order.trainID);
+      strcpy(query_train_max.trainID, order.trainID);
+      strcpy(query_train_max.type, max_password);
+      sjtu::vector<Train> res2 =
+          train_table->find(query_train, query_train_max);
+      if (res.empty()) {
+        std::cout << "-1\n";
+        continue;
+      }
+      assert(res.size() == 1);
+      train_table->erase(res2[0]);
+      for (int i = order.loc; i < order.end_loc; i++) {
+        res2[0].seatNum[order.dat][i] += order.num;
+      }
+      for (int i = 0; i < order.end_loc - order.loc; i++) {
+        query_order2.loc++;
+        query_order2_max.loc++;
+        sjtu::vector<DemoOrder2> res3 =
+            waiting_list->find(query_order2, query_order2_max);
+        for (int j = 0; j < res3.size(); j++) {
+          Order order2;
+          order_river->read(order2, res3[j].pos);
+          if (order2.status == 2) {
+            Order *order3 =
+                buy_ticket(res2[0], order2.username, order2.trainID, order2.dat,
+                           order2.loc, order2.end_loc, order2.num, false);
+            if (order3 == nullptr) {
+              continue;
+            }
+            delete order3;
+            order2.status = 1;
+            order_river->update(order2, res3[j].pos);
+          }
+        }
+      }
     }
   }
 }
