@@ -27,11 +27,11 @@ struct Train {
   int seatTotal = 0;
   int seatNum[100][101] = {}; // 你知道这很浪费
   int prices[101] = {};
-  Time startTime;
-  Time travelTimes[101];
-  Time stopoverTimes[101];
-  Time saleDate[2];
-  char type[2];
+  Time startTime = {};
+  Time travelTimes[101] = {};
+  Time stopoverTimes[101] = {};
+  Time saleDate[2] = {};
+  char type[2] = {};
   bool operator<(const Train &rhs) const {
     int trainID_cmp = std::strcmp(trainID, rhs.trainID);
     if (trainID_cmp < 0) {
@@ -335,10 +335,10 @@ struct DateLocation_Train {
   }
 };
 
-Train *add_train(const std::string &i, int n, int m, const std::string &s,
-                 const std::string p, const std::string &x,
-                 const std::string &t, const std::string &o,
-                 const std::string &d, const std::string &y);
+bool add_train(const std::string &i, int n, int m, const std::string &s,
+               const std::string p, const std::string &x, const std::string &t,
+               const std::string &o, const std::string &d, const std::string &y,
+               Train &train);
 
 void query_trains(Train *train, Time *date);
 

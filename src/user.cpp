@@ -16,15 +16,16 @@ bool valid_username(const std::string &u) {
   return true;
 }
 bool valid_password(const std::string &p) {
-  if (p.length() < 6 || p.length() > 30)
+  if (p.empty() || p.length() > 30)
     return false;
   for (char c : p) {
-    if (c != '_' and !isalnum(c))
+    if (!isprint(c))
       return false;
   }
   return true;
 }
 bool valid_name(const std::string &n) {
+  return true;
   std::regex pattern("^[\u4e00-\u9fa5]{2,5}$");
   bool t = std::regex_match(n, pattern);
   return t;

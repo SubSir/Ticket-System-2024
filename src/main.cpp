@@ -204,6 +204,8 @@ sjtu::vector<DemoTrain2> _query_transfer(string &s, Time &time, string &t) {
   return res3;
 }
 int main() {
+  // freopen("../testcases/basic_2/2.in", "r", stdin);
+  // freopen("../self.out", "w", stdout);
   memset(max_password, 127, sizeof(max_password));
   memset(max_password, 127, sizeof(max_trainid));
   max_time.month = 8;
@@ -235,6 +237,7 @@ int main() {
   while (true) {
     cin >> index;
     cin >> command;
+    cout << index << " ";
     if (command == "exit") {
       cout << "bye" << '\n';
       delete user_table;
@@ -329,7 +332,7 @@ int main() {
           std::cout << "-1\n";
           continue;
         }
-        if (cnt != 6) {
+        if (cnt + cnt2 != 6) {
           std::cout << "-1\n";
           continue;
         }
@@ -370,10 +373,14 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      User *user = new User();
-      strcpy(user->username, u.c_str());
-      strcpy(user->password, p.c_str());
-      sjtu::vector<User> res = user_table->find(*user, *user);
+      if (user_pool.find(u) != user_pool.end()) {
+        std::cout << "-1\n";
+        continue;
+      }
+      User user;
+      strcpy(user.username, u.c_str());
+      strcpy(user.password, p.c_str());
+      sjtu::vector<User> res = user_table->find(user, user);
       if (res.empty()) {
         std::cout << "-1\n";
         continue;
@@ -533,8 +540,9 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      Train *new_train = add_train(i, n, m, s, p, x, t, o, d, y);
-      if (new_train == nullptr) {
+      Train new_train;
+      bool bl = add_train(i, n, m, s, p, x, t, o, d, y, new_train);
+      if (!bl) {
         std::cout << "-1\n";
         continue;
       }
@@ -546,10 +554,9 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      train_table->insert(*new_train);
+      train_table->insert(new_train);
       cout << "0\n";
-      delete new_train;
-    } else if (command == "relese_train") {
+    } else if (command == "release_train") {
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
@@ -575,11 +582,11 @@ int main() {
         continue;
       }
       assert(res.size() == 1);
-      train_table->erase(res[0]);
       if (res[0].release) {
         std::cout << "-1\n";
         continue;
       }
+      train_table->erase(res[0]);
       res[0].release = true;
       train_table->insert(res[0]);
       for (Time t = res[0].saleDate[0]; t <= res[0].saleDate[1]; ++t) {
@@ -595,6 +602,7 @@ int main() {
             t2 += res[0].stopoverTimes[i - 1];
         }
       }
+      cout << "0\n";
     } else if (command == "query_train") {
       std::string line;
       std::getline(std::cin, line);

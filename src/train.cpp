@@ -17,6 +17,7 @@ bool valid_trainID(const std::string &u) {
 }
 bool valid_stationNum(int g) { return g >= 2 && g <= 100; }
 bool valid_stations(const std::string &s) {
+  return true;
   std::regex pattern("^[\u4e00-\u9fa5]{1,10}$");
   return std::regex_match(s, pattern);
 }
@@ -36,53 +37,49 @@ bool valid_type(const std::string &t) { return t >= "A" && t <= "Z"; }
 Time saleDate[2];
 char type[2] = {};
 
-Train *add_train(const std::string &i, int n, int m, const std::string &s,
-                 const std::string p, const std::string &x,
-                 const std::string &t, const std::string &o,
-                 const std::string &d, const std::string &y) {
+bool add_train(const std::string &i, int n, int m, const std::string &s,
+               const std::string p, const std::string &x, const std::string &t,
+               const std::string &o, const std::string &d, const std::string &y,
+               Train &train) {
   if (!valid_trainID(i) || !valid_stationNum(n) || !valid_seatNum(m) ||
-      !valid_startTime(x) || !valid_type(t))
-    return nullptr;
-  Train *train = new Train();
-  strcpy(train->trainID, i.c_str());
-  train->stationNum = n;
-  train->seatTotal = m;
+      !valid_startTime(x) || !valid_type(y))
+    return false;
+  strcpy(train.trainID, i.c_str());
+  train.stationNum = n;
+  train.seatTotal = m;
   std::istringstream iss(s);
   std::string token;
   int pos = 0;
   while (std::getline(iss, token, '|')) {
     if (!valid_stations(token)) {
-      delete train;
-      return nullptr;
+      return false;
     }
-    strcpy(train->stations[pos++], token.c_str());
+    strcpy(train.stations[pos++], token.c_str());
   }
   std::istringstream isss(p);
   pos = 0;
   while (std::getline(isss, token, '|')) {
     if (!valid_prices(std::stoi(token))) {
-      delete train;
-      return nullptr;
+      return false;
     }
-    train->prices[pos++] = std::stoi(token);
+    train.prices[pos++] = std::stoi(token);
   }
-  train->startTime.hour = std::stoi(x.substr(0, 2));
-  train->startTime.minute = std::stoi(x.substr(3, 2));
+  train.startTime.hour = std::stoi(x.substr(0, 2));
+  train.startTime.minute = std::stoi(x.substr(3, 2));
   std::istringstream isssss(o);
   pos = 0;
   while (std::getline(isssss, token, '|')) {
     if (!valid_stopoverTimes(std::stoi(token))) {
-      delete train;
-      return nullptr;
+      return false;
     }
-    train->stopoverTimes[pos++] = std::stoi(token);
+    train.stopoverTimes[pos++] = std::stoi(token);
   }
-  train->saleDate[0].month = std::stoi(d.substr(0, 2));
-  train->saleDate[0].day = std::stoi(d.substr(3, 2));
-  train->saleDate[1].month = std::stoi(d.substr(6, 2));
-  train->saleDate[1].day = std::stoi(d.substr(9, 2));
-  strcpy(train->type, t.c_str());
-  return train;
+  train.saleDate[0].month = std::stoi(d.substr(0, 2));
+  train.saleDate[0].day = std::stoi(d.substr(3, 2));
+  train.saleDate[1].month = std::stoi(d.substr(6, 2));
+  train.saleDate[1].day = std::stoi(d.substr(9, 2));
+  strcpy(train.type, t.c_str());
+  return true;
 }
 void query_trains(Train *train, Time *date) {
   std::cout << train->trainID << ' ' << train->type << '\n';

@@ -859,8 +859,8 @@ public:
     }
     ~node() { delete data; }
   };
-  node *root;
-  size_t sz;
+  node *root = nullptr;
+  size_t sz = 0;
   node *copy_tree(node *des, node *src) {
     if (src == nullptr)
       return nullptr;
@@ -1329,6 +1329,7 @@ public:
     }
   }
   ~BPT() {
+    delete root;
     file.close();
     binfile.open("bin" + filename, ios::out);
     rubbish *tmp = _head;
