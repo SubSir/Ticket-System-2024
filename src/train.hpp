@@ -283,10 +283,10 @@ struct DemoTrain2 {
   int num1 = 0;
   int price2 = 0;
   int num2 = 0;
-  Time startTime;
-  Time startTime2;
-  Time endTime;
-  Time endTime2;
+  Time startTime = {};
+  Time startTime2 = {};
+  Time endTime = {};
+  Time endTime2 = {};
   char transfer_locate[31] = {};
   bool operator<(const DemoTrain2 &rhs) const {
     if (startTime < rhs.startTime) {
@@ -308,18 +308,26 @@ struct DemoTrain2 {
   }
 };
 struct DateLocation_Train {
-  Time date;
-  char to[31];
-  char trainID[21];
+  Time date = {};
+  char to[31] = {};
+  char trainID[21] = {};
   bool operator<(const DateLocation_Train &rhs) const {
-    if (std::strcmp(to, rhs.to) < 0) {
+    int to_cmp = std::strcmp(to, rhs.to);
+    if (to_cmp < 0) {
       return true;
-    } else if (std::strcmp(to, rhs.to) == 0) {
-      if (date.month < rhs.date.month) {
-        return true;
-      } else if (date.month == rhs.date.month) {
-        return date.day < rhs.date.day;
-      }
+    } else if (to_cmp > 0) {
+      return false;
+    }
+    if (date < rhs.date) {
+      return true;
+    } else if (date > rhs.date) {
+      return false;
+    }
+    int trainID_cmp = std::strcmp(trainID, rhs.trainID);
+    if (trainID_cmp < 0) {
+      return true;
+    } else if (trainID_cmp > 0) {
+      return false;
     }
     return false;
   }
@@ -342,11 +350,11 @@ bool add_train(const std::string &i, int n, int m, const std::string &s,
 
 void query_trains(Train *train, Time *date);
 
-Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
-                  const std::string &d, const std::string &f,
-                  const std::string &t, int n, bool p);
-Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
-                  int dat, int loc, int end_loc, int n, bool p);
+bool buy_ticket(Train &train, const std::string &u, const std::string &i,
+                const std::string &d, const std::string &f,
+                const std::string &t, int n, bool p, Order &order);
+bool buy_ticket(Train &train, const std::string &u, const std::string &i,
+                int dat, int loc, int end_loc, int n, bool p, Order &order);
 bool timecmp(const DemoTrain &a, const DemoTrain &b);
 bool timecmp2(const DemoTrain2 &a, const DemoTrain2 &b);
 bool costcmp(const DemoTrain &a, const DemoTrain &b);

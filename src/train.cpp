@@ -74,6 +74,14 @@ bool add_train(const std::string &i, int n, int m, const std::string &s,
     }
     train.stopoverTimes[pos++] = std::stoi(token);
   }
+  pos = 0;
+  std::istringstream issssss(t);
+  while (std::getline(issssss, token, '|')) {
+    if (!valid_travelTimes(std::stoi(token))) {
+      return false;
+    }
+    train.travelTimes[pos++] = std::stoi(token);
+  }
   train.saleDate[0].month = std::stoi(d.substr(0, 2));
   train.saleDate[0].day = std::stoi(d.substr(3, 2));
   train.saleDate[1].month = std::stoi(d.substr(6, 2));
@@ -110,11 +118,11 @@ void query_trains(Train *train, Time *date) {
     std::cout << '\n';
   }
 }
-Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
-                  const std::string &d, const std::string &f,
-                  const std::string &t, int n, bool p) {
+bool buy_ticket(Train &train, const std::string &u, const std::string &i,
+                const std::string &d, const std::string &f,
+                const std::string &t, int n, bool p, Order &order) {
   if (train.release == false) {
-    return nullptr;
+    return false;
   }
   int pos = 0;
   Time st = train.startTime + train.saleDate[0];
@@ -124,14 +132,14 @@ Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
       break;
     }
     st += train.travelTimes[i];
-    if (i > 0)
-      st += train.stopoverTimes[i - 1];
+    st += train.stopoverTimes[i];
   }
   // 是否会有traveltime的问题
   bool flag = false;
-  // 31天修正未进行
-  int date = (std::stoi(d.substr(0, 2)) - st.month) * 30 +
-             std::stoi(d.substr(3, 2)) - st.day;
+  Time ti;
+  ti.month = std::stoi(d.substr(0, 2));
+  ti.day = std::stoi(d.substr(3, 2));
+  int date = ti - st;
   for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
     if (train.seatNum[date][i] + n > train.seatTotal) {
       flag = true;
@@ -139,50 +147,48 @@ Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
     }
   }
   if (flag and !p)
-    return nullptr;
+    return false;
   int price = 0;
   for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
     price += train.prices[i];
   }
-  if (!p)
+  if (!flag)
     for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
       train.seatNum[date][i] += n;
     }
-  Order *order = new Order();
-  strcpy(order->username, u.c_str());
-  strcpy(order->trainID, i.c_str());
-  order->startTime = train.startTime;
-  strcpy(order->from, f.c_str());
-  strcpy(order->to, t.c_str());
-  order->arriveTime = train.startTime;
+  strcpy(order.username, u.c_str());
+  strcpy(order.trainID, i.c_str());
+  order.startTime = train.startTime;
+  strcpy(order.from, f.c_str());
+  strcpy(order.to, t.c_str());
+  order.arriveTime = train.startTime;
   for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
-    order->end_loc = i;
-    order->arriveTime += train.travelTimes[i];
+    order.end_loc = i;
+    order.arriveTime += train.travelTimes[i];
     if (i > pos)
-      order->arriveTime += train.stopoverTimes[i - 1];
+      order.arriveTime += train.stopoverTimes[i - 1];
   }
-  order->end_loc++;
-  order->price = price;
-  order->num = n;
-  order->dat = date;
-  order->loc = pos;
+  order.end_loc++;
+  order.price = price * n;
+  order.num = n;
+  order.dat = date;
+  order.loc = pos;
   if (!flag)
-    order->status = 1;
+    order.status = 1;
   else
-    order->status = 2;
-  return order;
+    order.status = 2;
+  return true;
 }
-Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
-                  int dat, int loc, int end_loc, int n, bool p) {
+bool buy_ticket(Train &train, const std::string &u, const std::string &i,
+                int dat, int loc, int end_loc, int n, bool p, Order &order) {
   if (train.release == false) {
-    return nullptr;
+    return false;
   }
   int pos = 0;
   Time st = train.startTime + train.saleDate[0];
   for (int i = 0; i <= loc; i++) {
     st += train.travelTimes[i];
-    if (i > 0)
-      st += train.stopoverTimes[i - 1];
+    st += train.stopoverTimes[i];
   }
   // 是否会有traveltime的问题
   bool flag = false;
@@ -195,7 +201,7 @@ Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
     }
   }
   if (flag and !p)
-    return nullptr;
+    return false;
   int price = 0;
   for (int i = pos; i < end_loc; i++) {
     price += train.prices[i];
@@ -204,27 +210,26 @@ Order *buy_ticket(Train &train, const std::string &u, const std::string &i,
     for (int i = pos; i < end_loc; i++) {
       train.seatNum[date][i] += n;
     }
-  Order *order = new Order();
-  strcpy(order->username, u.c_str());
-  strcpy(order->trainID, i.c_str());
-  order->startTime = train.startTime;
-  order->arriveTime = train.startTime;
+  strcpy(order.username, u.c_str());
+  strcpy(order.trainID, i.c_str());
+  order.startTime = train.startTime;
+  order.arriveTime = train.startTime;
   for (int i = pos; i < end_loc; i++) {
-    order->end_loc = i;
-    order->arriveTime += train.travelTimes[i];
+    order.end_loc = i;
+    order.arriveTime += train.travelTimes[i];
     if (i > pos)
-      order->arriveTime += train.stopoverTimes[i - 1];
+      order.arriveTime += train.stopoverTimes[i - 1];
   }
-  order->end_loc++;
-  order->price = price;
-  order->num = n;
-  order->dat = date;
-  order->loc = pos;
+  order.end_loc++;
+  order.price = price * n;
+  order.num = n;
+  order.dat = date;
+  order.loc = pos;
   if (!flag)
-    order->status = 1;
+    order.status = 1;
   else
-    order->status = 2;
-  return order;
+    order.status = 2;
+  return true;
 }
 bool timecmp(const DemoTrain &a, const DemoTrain &b) {
   Time t1 = a.startTime + b.endTime;

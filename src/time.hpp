@@ -2,17 +2,17 @@
 #define TIME_HPP
 #include <iomanip>
 #include <iostream>
+
 struct Time {
   int month = 0, day = 0, hour = 0, minute = 0;
-  //很愚蠢的做法，可能手动改的month为30，导致进位存在问题
+  static int month_day[13];
+  static int month_days[13];
   Time(int x) {
     minute = x % 60;
     x /= 60;
     hour = x % 24;
     x /= 24;
-    day = x % 30;
-    x /= 30;
-    month = x;
+    month_date(x, month, day);
   }
   Time() = default;
   Time operator+(const Time &other) const {
@@ -20,12 +20,14 @@ struct Time {
     result.minute = this->minute + other.minute;
     result.hour = this->hour + other.hour + result.minute / 60;
     result.minute %= 60;
-    result.day = this->day + other.day + result.hour / 24;
+    result.day = result.hour / 24;
     result.hour %= 24;
-    result.month = this->month + other.month + result.day / 30;
-    result.day %= 30;
-    // 假设每个月都是30天，每年都是12个月
-    result.month %= 12;
+    int x1, x2;
+    date_month(this->month, this->day, x1);
+    date_month(other.month, other.day, x2);
+    x1 += x2;
+    x1 += result.day;
+    month_date(x1, result.month, result.day);
     return result;
   }
   Time &operator+=(const Time &other) {
@@ -33,15 +35,30 @@ struct Time {
     return *this;
   }
   int operator-(const Time &other) const {
-    return (this->month - other.month) * 30 + this->day - other.day;
+    int x1, x2;
+    date_month(this->month, this->day, x1);
+    date_month(other.month, other.day, x2);
+    return x1 - x2;
   }
   Time &operator++() {
     this->day++;
-    if (day == 30) {
-      day = 0;
+    if (day == month_day[month] + 1) {
+      day = 1;
       month++;
     }
     return *this;
+  }
+  static void month_date(int x, int &month, int &day) {
+    for (int i = 1; i < 13; i++) {
+      if (x <= month_days[i]) {
+        month = i - 1;
+        break;
+      }
+    }
+    day = x - month_days[month];
+  }
+  static void date_month(int month, int day, int &x) {
+    x = month_days[month] + day;
   }
   bool operator<(const Time &other) const {
     if (this->month != other.month) {
