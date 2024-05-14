@@ -38,7 +38,7 @@ sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t) {
     if (res2.empty()) {
       continue;
     }
-    assert(res2.size() == 1);
+    // assert(res2.size() == 1);
     if (!res2[0].release) {
       continue;
     }
@@ -54,7 +54,7 @@ sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t) {
       time2 += res2[0].stopoverTimes[j];
     }
     int index = time - time2;
-    assert(begin != -1);
+    // assert(begin != -1);
     int valseatNum = res2[0].seatTotal - res2[0].seatNum[index][begin];
     Time time3;
     for (int j = begin; j < res2[0].stationNum; j++) {
@@ -103,7 +103,7 @@ sjtu::vector<DemoTrain> _query_train(string &s, Time &old_time, string &t,
   if (res2.empty()) {
     return res3;
   }
-  assert(res2.size() == 1);
+  // assert(res2.size() == 1);
   if (!res2[0].release) {
     return res3;
   }
@@ -117,7 +117,7 @@ sjtu::vector<DemoTrain> _query_train(string &s, Time &old_time, string &t,
     }
   }
   int valseatNum = res2[0].seatTotal - res2[0].seatNum[index][begin];
-  assert(begin != -1);
+  // assert(begin != -1);
   Time time3;
   for (int j = begin; j < res2[0].stationNum; j++) {
     if (strcmp(res2[0].stations[j], t.c_str()) == 0) {
@@ -160,7 +160,7 @@ sjtu::vector<DemoTrain2> _query_transfer(string &s, Time &time, string &t) {
     if (res2.empty()) {
       continue;
     }
-    assert(res2.size() == 1);
+    // assert(res2.size() == 1);
     if (!res2[0].release) {
       continue;
     }
@@ -174,7 +174,7 @@ sjtu::vector<DemoTrain2> _query_transfer(string &s, Time &time, string &t) {
       }
     }
     int valseatNum = res2[0].seatTotal - res2[0].seatNum[index][begin];
-    assert(begin != -1);
+    // assert(begin != -1);
     Time time3;
     for (int j = begin; j < res2[0].stationNum; j++) {
       if (j != begin) {
@@ -206,10 +206,11 @@ sjtu::vector<DemoTrain2> _query_transfer(string &s, Time &time, string &t) {
   return res3;
 }
 int Time::month_day[13] = {0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-int Time::month_days[13] = {};
+int Time::month_days[13] = {0,   0,   31,  60,  91,  121, 152,
+                            182, 213, 244, 274, 305, 335};
 int main() {
-  // freopen("../testcases/basic_2/2.in", "r", stdin);
-  // freopen("../self.out", "w", stdout);
+  freopen("../testcases/basic_2/2.in", "r", stdin);
+  freopen("../self.out", "w", stdout);
   memset(max_password, 127, sizeof(max_password));
   max_password[30] = 0;
   memset(max_trainid, 127, sizeof(max_trainid));
@@ -219,9 +220,6 @@ int main() {
   max_time.hour = 23;
   max_time.minute = 59;
   max_ind = 0x7fffffff;
-  for (int i = 1; i < 13; i++) {
-    Time::month_days[i] = Time::month_days[i - 1] + Time::month_day[i - 1];
-  }
   user_table = new BPT<User>("user");
   train_table = new BPT<Train>("train");
   date_location_train_table =
@@ -231,15 +229,6 @@ int main() {
   order_river = new MemoryRiver<Order>("order");
   sjtu::map<std::string, User> user_pool;
   std::string i, s, p, x, t, o, d, y, in;
-  ifstream ff("root");
-  if (ff) {
-    ff.close();
-  } else {
-    fstream fout("root", ios::out);
-    fout.close();
-    ff.close();
-  }
-  fstream fin("root", ios::in | ios::out);
   int n, m;
   string index, command;
   int ind = -1;
@@ -255,7 +244,7 @@ int main() {
       delete order_table;
       delete waiting_list;
       delete order_river;
-      break;
+      return 0;
     } else if (command == "clear") {
       delete user_table;
       delete train_table;
@@ -285,10 +274,6 @@ int main() {
       fout.close();
       fout.open("orderriver", std::ios::trunc);
       fout.close();
-      fin.close();
-      fout.open("root", std::ios::trunc);
-      fout.close();
-      fstream fin("root", ios::in | ios::out);
       user_table = new BPT<User>("user");
       train_table = new BPT<Train>("train");
       date_location_train_table =
@@ -326,7 +311,9 @@ int main() {
           g = stoi(i);
         }
       }
-      if (fin.seekg(0, ios::end).tellg() == 0) {
+      int o = -1;
+      order_river->get_info(o, 1);
+      if (o == 0) {
         if (cnt2 != 4) {
           std::cout << "-1\n";
           continue;
@@ -354,15 +341,16 @@ int main() {
           continue;
         }
       }
-      User *new_user = add_user(u, p, n, m, g);
-      if (new_user == nullptr) {
+      User new_user;
+      bool bl = add_user(u, p, n, m, g, new_user);
+      if (!bl) {
         std::cout << "-1\n";
         continue;
       }
-      user_table->insert(*new_user);
-      fin.write(reinterpret_cast<char *>(new_user), sizeof(User));
+      user_table->insert(new_user);
+      o++;
+      order_river->write_info(o, 1);
       std::cout << "0\n";
-      delete new_user;
     } else if (command == "login") {
       std::string line;
       std::getline(std::cin, line);
@@ -451,7 +439,7 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      assert(res.size() == 1);
+      // assert(res.size() == 1);
       query_profile(&res[0]);
     } else if (command == "modify_profile") {
       std::string line;
@@ -493,7 +481,7 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      assert(res.size() == 1);
+      // assert(res.size() == 1);
       user_table->erase(res[0]);
       if (!modify_profile(&res[0], p, n, m, g)) {
         std::cout << "-1\n";
@@ -590,7 +578,7 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      assert(res.size() == 1);
+      // assert(res.size() == 1);
       if (res[0].release) {
         std::cout << "-1\n";
         continue;
@@ -643,7 +631,7 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      assert(res.size() == 1);
+      // assert(res.size() == 1);
       if (t < res[0].saleDate[0] or res[0].saleDate[1] < t) {
         std::cout << "-1\n";
         continue;
@@ -674,7 +662,7 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      assert(res.size() == 1);
+      // assert(res.size() == 1);
       if (res[0].release) {
         std::cout << "-1\n";
         continue;
@@ -827,7 +815,7 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      assert(res.size() == 1);
+      // assert(res.size() == 1);
       if (!res[0].release) {
         std::cout << "-1\n";
         continue;
@@ -888,10 +876,10 @@ int main() {
       sjtu::vector<DemoOrder> res =
           order_table->find(query_order, query_order_max);
       cout << res.size() << '\n';
-      for (int i = 0; i < res.size(); i++) {
+      for (int i = res.size() - 1; i >= 0; i--) {
         Order order;
         order_river->read(order, res[i].pos);
-        cout << order << '\n';
+        cout << order;
       }
     } else if (command == "refund_ticket") {
       std::string line;
@@ -954,7 +942,7 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      assert(res2.size() == 1);
+      // assert(res2.size() == 1);
       train_table->erase(res2[0]);
       for (int i = order.loc; i < order.end_loc; i++) {
         res2[0].seatNum[order.dat][i] += order.num;

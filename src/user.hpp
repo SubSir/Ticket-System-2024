@@ -38,8 +38,8 @@ struct User {
   }
 };
 
-User *add_user(const std::string &u, const std::string &p, const std::string &n,
-               const std::string &m, int g);
+bool add_user(const std::string &u, const std::string &p, const std::string &n,
+              const std::string &m, int g, User &user);
 
 bool login(const std::string &u, const std::string &p, User *user);
 

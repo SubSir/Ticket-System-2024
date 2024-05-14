@@ -127,8 +127,8 @@ struct Order {
       os << "[refunded] ";
     }
     os << order.trainID << ' ' << order.from << ' ' << order.startTime << " -> "
-       << order.to << ' ' << order.arriveTime << ' ' << order.price << ' '
-       << order.num << '\n';
+       << order.to << ' ' << order.arriveTime << ' ' << order.price / order.num
+       << ' ' << order.num << '\n';
     return os;
   }
   bool operator<(const Order &rhs) const {

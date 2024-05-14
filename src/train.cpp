@@ -86,35 +86,37 @@ bool add_train(const std::string &i, int n, int m, const std::string &s,
   train.saleDate[0].day = std::stoi(d.substr(3, 2));
   train.saleDate[1].month = std::stoi(d.substr(6, 2));
   train.saleDate[1].day = std::stoi(d.substr(9, 2));
-  strcpy(train.type, t.c_str());
+  strcpy(train.type, y.c_str());
   return true;
 }
 void query_trains(Train *train, Time *date) {
   std::cout << train->trainID << ' ' << train->type << '\n';
+  int index = *date - train->saleDate[0];
   Time time = train->startTime + *date;
   int price = 0;
   for (int i = 0; i < train->stationNum; i++) {
     std::cout << train->stations[i] << ' ';
     if (i == 0) {
-      std::cout << "xx-xx xx:xx ";
-    } else {
-      time += train->stopoverTimes[i - 1];
-      std::cout << time << ' ';
-    }
-    std::cout << "-> ";
-    time += train->travelTimes[i];
-    if (i == train->stationNum - 1) {
-      std::cout << "xx-xx xx:xx ";
+      std::cout << "xx-xx xx:xx "
+                << "-> " << time << ' ';
     } else {
       std::cout << time << ' ';
+      std::cout << "-> ";
+      if (i == train->stationNum - 1) {
+        std::cout << "xx-xx xx:xx ";
+      } else {
+        time += train->stopoverTimes[i - 1];
+        std::cout << time << ' ';
+      }
     }
     std::cout << price << ' ';
     price += train->prices[i];
     if (i == train->stationNum - 1) {
       std::cout << 'x';
     } else {
-      std::cout << train->seatNum[i];
+      std::cout << train->seatTotal - train->seatNum[index][i];
     }
+    time += train->travelTimes[i];
     std::cout << '\n';
   }
 }
@@ -140,6 +142,11 @@ bool buy_ticket(Train &train, const std::string &u, const std::string &i,
   ti.month = std::stoi(d.substr(0, 2));
   ti.day = std::stoi(d.substr(3, 2));
   int date = ti - st;
+  if (date < 0)
+    return false;
+  int date2 = train.saleDate[1] - train.saleDate[0];
+  if (date > date2)
+    return false;
   for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
     if (train.seatNum[date][i] + n > train.seatTotal) {
       flag = true;
@@ -158,10 +165,12 @@ bool buy_ticket(Train &train, const std::string &u, const std::string &i,
     }
   strcpy(order.username, u.c_str());
   strcpy(order.trainID, i.c_str());
-  order.startTime = train.startTime;
+  order.startTime = ti;
+  order.startTime.minute = st.minute;
+  order.startTime.hour = st.hour;
   strcpy(order.from, f.c_str());
   strcpy(order.to, t.c_str());
-  order.arriveTime = train.startTime;
+  order.arriveTime = order.startTime;
   for (int i = pos; strcmp(train.stations[i], t.c_str()) != 0; i++) {
     order.end_loc = i;
     order.arriveTime += train.travelTimes[i];
@@ -186,13 +195,12 @@ bool buy_ticket(Train &train, const std::string &u, const std::string &i,
   }
   int pos = 0;
   Time st = train.startTime + train.saleDate[0];
-  for (int i = 0; i <= loc; i++) {
+  for (int i = 0; i < loc; i++) {
     st += train.travelTimes[i];
     st += train.stopoverTimes[i];
   }
   // 是否会有traveltime的问题
   bool flag = false;
-  // 31天修正未进行
   int date = dat;
   for (int i = pos; i < end_loc; i++) {
     if (train.seatNum[date][i] + n > train.seatTotal) {
@@ -212,8 +220,8 @@ bool buy_ticket(Train &train, const std::string &u, const std::string &i,
     }
   strcpy(order.username, u.c_str());
   strcpy(order.trainID, i.c_str());
-  order.startTime = train.startTime;
-  order.arriveTime = train.startTime;
+  order.startTime = st + dat * 24 * 60;
+  order.arriveTime = order.startTime;
   for (int i = pos; i < end_loc; i++) {
     order.end_loc = i;
     order.arriveTime += train.travelTimes[i];
@@ -234,13 +242,13 @@ bool buy_ticket(Train &train, const std::string &u, const std::string &i,
 bool timecmp(const DemoTrain &a, const DemoTrain &b) {
   Time t1 = a.startTime + b.endTime;
   Time t2 = a.endTime + b.startTime;
-  if (t1 < t2) {
+  if (t1 > t2) {
     return true;
   }
-  if (t1 > t2) {
+  if (t1 < t2) {
     return false;
   }
-  return a.prices < b.prices;
+  return strcmp(a.trainID, b.trainID) < 0;
 }
 bool costcmp(const DemoTrain &a, const DemoTrain &b) {
   if (a.prices < b.prices) {
@@ -249,26 +257,18 @@ bool costcmp(const DemoTrain &a, const DemoTrain &b) {
   if (a.prices > b.prices) {
     return false;
   }
-  Time t1 = a.startTime + a.endTime;
-  Time t2 = b.startTime + b.endTime;
-  if (t1 < t2) {
-    return true;
-  }
-  if (t1 > t2) {
-    return false;
-  }
-  return a.num > b.num;
+  return strcmp(a.trainID, b.trainID) < 0;
 }
 bool timecmp2(const DemoTrain2 &a, const DemoTrain2 &b) {
   Time t1 = a.startTime + b.endTime2;
   Time t2 = a.endTime + b.startTime2;
-  if (t1 < t2) {
+  if (t1 > t2) {
     return true;
   }
-  if (t1 > t2) {
+  if (t1 < t2) {
     return false;
   }
-  return a.prices < b.prices;
+  return strcmp(a.trainID, b.trainID) < 0;
 }
 bool costcmp2(const DemoTrain2 &a, const DemoTrain2 &b) {
   if (a.prices < b.prices) {
@@ -277,13 +277,5 @@ bool costcmp2(const DemoTrain2 &a, const DemoTrain2 &b) {
   if (a.prices > b.prices) {
     return false;
   }
-  Time t1 = a.startTime + a.endTime2;
-  Time t2 = b.startTime + b.endTime2;
-  if (t1 < t2) {
-    return true;
-  }
-  if (t1 > t2) {
-    return false;
-  }
-  return a.num > b.num;
+  return strcmp(a.trainID, b.trainID) < 0;
 }

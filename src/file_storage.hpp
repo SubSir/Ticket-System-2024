@@ -2032,7 +2032,7 @@ using std::ifstream;
 using std::ofstream;
 using std::string;
 
-template <class T, int info_len = 0> class MemoryRiver {
+template <class T, int info_len = 1> class MemoryRiver {
 private:
   int add_len = 0;
   fstream file;

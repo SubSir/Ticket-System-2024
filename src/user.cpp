@@ -25,25 +25,23 @@ bool valid_password(const std::string &p) {
   return true;
 }
 bool valid_name(const std::string &n) {
-  return true;
-  std::regex pattern("^[\u4e00-\u9fa5]{2,5}$");
-  bool t = std::regex_match(n, pattern);
-  return t;
+  return n.length() >= 6 && n.length() <= 15;
 }
 bool valid_privilege(int g) { return g >= 0 && g <= 10; }
 
-User *add_user(const std::string &u, const std::string &p, const std::string &n,
-               const std::string &m, int g) {
+bool valid_mail(const std::string &m) { return m.length() <= 30; }
+
+bool add_user(const std::string &u, const std::string &p, const std::string &n,
+              const std::string &m, int g, User &user) {
   if (!valid_username(u) || !valid_password(p) || !valid_name(n) ||
-      !valid_privilege(g))
-    return nullptr;
-  User *user = new User();
-  strcpy(user->username, u.c_str());
-  strcpy(user->password, p.c_str());
-  strcpy(user->name, n.c_str());
-  strcpy(user->mail, m.c_str());
-  user->privilege = g;
-  return user;
+      !valid_privilege(g) || !valid_mail(m))
+    return false;
+  strcpy(user.username, u.c_str());
+  strcpy(user.password, p.c_str());
+  strcpy(user.name, n.c_str());
+  strcpy(user.mail, m.c_str());
+  user.privilege = g;
+  return true;
 }
 bool login(const std::string &u, const std::string &p, User *user) {
   return strcmp(u.c_str(), user->username) == 0 &&
