@@ -901,9 +901,10 @@ int main() {
       }
       // assert(res2.size() == 1);
       train_table.erase(res2[0]);
-      for (int i = order.loc; i < order.end_loc; i++) {
-        res2[0].seatNum[order.dat][i] += order.num;
-      }
+      if (order.status == 1)
+        for (int i = order.loc; i < order.end_loc; i++) {
+          res2[0].seatNum[order.dat][i] -= order.num;
+        }
       for (int i = 0; i < order.end_loc - order.loc; i++) {
         query_order2.loc++;
         query_order2_max.loc++;
@@ -922,6 +923,7 @@ int main() {
             }
             order2.status = 1;
             order_river.update(order2, res3[j].pos);
+            waiting_list.erase(res3[j]);
           }
         }
       }
