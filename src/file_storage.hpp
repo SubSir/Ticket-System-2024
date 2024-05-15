@@ -1265,11 +1265,17 @@ using namespace sjtu;
 template <class T, int degree = 50> class BPT {
 public:
   struct node {
-    bool is_leaf = false;
-    T key[degree] = {};
-    int size = 0;
-    int son[degree] = {0};
-    int next = -1;
+    bool is_leaf;
+    T key[degree];
+    int size;
+    int son[degree];
+    int next;
+
+    node() {
+      std::memset(this, 0, sizeof(node));
+      is_leaf = false;
+      next = -1;
+    }
   };
   struct rubbish {
     int pos = 0;
@@ -1286,49 +1292,19 @@ public:
   node *root = nullptr;
   fstream file, binfile;
   rubbish *_head = nullptr;
-  //  node *line[1000] = {nullptr};
   vector<node *> line;
-  //  int _line[1000];
   vector<int> _line;
-  //  node *stack[5000] = {nullptr};
   vector<node *> stack;
-  //  T *stack_key[5000] = {nullptr};
   vector<T *> stack_key;
-  //  T *replace_key[5000] = {nullptr};
   vector<T *> replace_key;
-  // int pos[5000];
   vector<int> pos;
   std::string filename;
   BPT(const std::string &filename = "") {
     this->filename = filename;
-    root = nullptr;
-    ifstream file2("BPT" + filename);
-    if (!file2.good()) {
-      file.open("BPT" + filename, ios::out);
-      file.close();
-      file.open("BPT" + filename, ios::in | ios::out);
-    } else {
-      file.open("BPT" + filename, ios::in | ios::out);
-      binfile.open("bin" + filename, ios::in);
-      rubbish *tmp = nullptr;
-      int pos;
-      while (file2 >> pos) {
-        if (_head == nullptr) {
-          _head = new rubbish;
-          _head->pos = pos;
-          tmp = _head;
-        } else {
-          tmp->next = new rubbish;
-          tmp = tmp->next;
-          tmp->pos = pos;
-        }
-      }
-      binfile.close();
-      read(0, root);
-      file2.close();
-    }
+    initial();
   }
-  ~BPT() {
+  ~BPT() { exit(); }
+  void exit() {
     delete root;
     file.close();
     binfile.open("bin" + filename, ios::out);
@@ -1343,6 +1319,50 @@ public:
     while (length) {
       pop();
     }
+  }
+  void initial() {
+    root = nullptr;
+    ifstream file2("BPT" + filename);
+    if (!file2.good()) {
+      file.open("BPT" + filename, ios::out);
+      file.close();
+      file.open("BPT" + filename, ios::in | ios::out);
+    } else {
+      file.open("BPT" + filename, ios::in | ios::out);
+      binfile.open("bin" + filename, ios::in);
+      rubbish *tmp = nullptr;
+      int pos;
+      while (file2 >> pos) {
+        if (_head == nullptr) {
+          _head = new rubbish();
+          _head->pos = pos;
+          tmp = _head;
+        } else {
+          tmp->next = new rubbish();
+          tmp = tmp->next;
+          tmp->pos = pos;
+        }
+      }
+      binfile.close();
+      read(0, root);
+      file2.close();
+    }
+  }
+  void clear() {
+    exit();
+    buffer_map.clear();
+    _head = nullptr;
+    line.clear();
+    _line.clear();
+    stack.clear();
+    stack_key.clear();
+    replace_key.clear();
+    pos.clear();
+    file.open("BPT" + filename, ios::out);
+    file.close();
+    binfile.open("bin" + filename, ios::out);
+    binfile.close();
+    initial();
   }
   void pop() {
     if (length == 0)
@@ -1473,7 +1493,7 @@ public:
       head = t;
       return;
     }
-    x = new node;
+    x = new node();
     file.seekg(pos);
     file.read(reinterpret_cast<char *>(x), sizeof(node));
     buffer *tmp = new buffer;
@@ -1494,7 +1514,7 @@ public:
     }
   }
   void recycle(int pos) {
-    rubbish *tmp = new rubbish;
+    rubbish *tmp = new rubbish();
     tmp->pos = pos;
     tmp->next = _head;
     _head = tmp;
@@ -1507,8 +1527,7 @@ public:
       root->is_leaf = true;
       root->key[0] = x;
       root->size = 1;
-      node *tmp = root;
-      write(0, tmp);
+      write(0, root);
       return;
     }
     int top = 0;
@@ -1625,7 +1644,7 @@ public:
       return;
     }
     while (top > 0 and line[top]->size == degree) {
-      node *new_node = new node;
+      node *new_node = new node();
       for (int i = 0; i < degree / 2; i++) {
         new_node->key[i] = line[top]->key[i + (degree + 1) / 2];
         new_node->son[i] = line[top]->son[i + (degree + 1) / 2];
@@ -2045,7 +2064,15 @@ public:
   MemoryRiver(const string &file_name) : file_name(file_name + "river") {
     initialise();
   }
-
+  void clear() {
+    file.close();
+    file.open(file_name, std::ios::out);
+    int tmp = 0;
+    for (int i = 0; i < info_len; ++i)
+      file.write(reinterpret_cast<char *>(&tmp), sizeof(int));
+    file.close();
+    file.open(file_name, std::ios::in | std::ios::out);
+  }
   void initialise(string FN = "") {
     if (FN != "")
       file_name = FN;

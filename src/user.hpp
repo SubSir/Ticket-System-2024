@@ -15,6 +15,7 @@ struct User {
   char name[16] = {};
   char mail[31] = {};
   int privilege = 0;
+  User() { std::memset(this, 0, sizeof(User)); }
   bool operator<(const User &rhs) const {
     int username_cmp = std::strcmp(username, rhs.username);
     if (username_cmp < 0) {

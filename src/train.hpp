@@ -118,6 +118,7 @@ struct Order {
   int price = 0;
   int num = 0;
   int status = 0;
+  Order() { std::memset(this, 0, sizeof(Order)); }
   friend std::ostream &operator<<(std::ostream &os, const Order &order) {
     if (order.status == 1) {
       os << "[success] ";
@@ -190,6 +191,7 @@ struct Order {
 struct DemoOrder {
   int pos = 0;
   char username[21] = {};
+  DemoOrder() { std::memset(this, 0, sizeof(DemoOrder)); }
   bool operator<(const DemoOrder &rhs) const {
     int username_cmp = std::strcmp(username, rhs.username);
     if (username_cmp < 0) {
@@ -218,6 +220,7 @@ struct DemoOrder2 {
   int loc = 0;
   int end_loc = 0;
   int n = 0;
+  DemoOrder2() { std::memset(this, 0, sizeof(DemoOrder2)); }
   bool operator<(const DemoOrder2 &rhs) const {
     int trainID_cmp = std::strcmp(trainID, rhs.trainID);
     if (trainID_cmp < 0) {
