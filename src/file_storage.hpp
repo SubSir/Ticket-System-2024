@@ -1262,7 +1262,7 @@ public:
 #endif
 
 using namespace sjtu;
-template <class T, int degree = 50> class BPT {
+template <class T, int degree = 100> class BPT {
 public:
   struct node {
     bool is_leaf;
@@ -1287,7 +1287,7 @@ public:
     buffer *pre = nullptr, *next = nullptr;
   } *head = nullptr, *tail = nullptr;
   int length = 0;
-  const int Maxlength = 10000;
+  const int Maxlength = 1000;
   map<int, buffer *> buffer_map;
   node *root = nullptr;
   fstream file, binfile;
