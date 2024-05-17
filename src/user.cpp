@@ -33,9 +33,9 @@ bool valid_mail(const std::string &m) { return m.length() <= 30; }
 
 bool add_user(const std::string &u, const std::string &p, const std::string &n,
               const std::string &m, int g, User &user) {
-  if (!valid_username(u) || !valid_password(p) || !valid_name(n) ||
-      !valid_privilege(g) || !valid_mail(m))
-    return false;
+  // if (!valid_username(u) || !valid_password(p) || !valid_name(n) ||
+  //     !valid_privilege(g) || !valid_mail(m))
+  //   return false;
   strcpy(user.username, u.c_str());
   strcpy(user.password, p.c_str());
   strcpy(user.name, n.c_str());
@@ -53,9 +53,9 @@ void query_profile(User *user) {
 }
 bool modify_profile(User *user, const std::string &p, const std::string &n,
                     const std::string &m, int g) {
-  if ((!valid_password(p) and p.length() > 0) ||
-      (!valid_name(n) and n.length() > 0) || (!valid_privilege(g) and g >= 0))
-    return false;
+  // if ((!valid_password(p) and p.length() > 0) ||
+  //    (!valid_name(n) and n.length() > 0) || (!valid_privilege(g) and g >= 0))
+  // return false;
   if (p.length() > 0)
     strcpy(user->password, p.c_str());
   if (n.length() > 0)

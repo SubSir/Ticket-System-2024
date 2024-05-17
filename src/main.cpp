@@ -110,24 +110,29 @@ sjtu::vector<DemoTrain2> _query_transfer(string &s, Time &time, string &t) {
       continue;
     }
     int price = 0;
-    int index = time - train.saleDate[0];
     int begin = -1;
+    Time time2 = train.saleDate[0] + train.startTime;
     for (int j = 0; j < train.stationNum; j++) {
       if (strcmp(train.stations[j], s.c_str()) == 0) {
         begin = j;
         break;
       }
+      time2 += train.travelTimes[j];
+      time2 += train.stopoverTimes[j];
     }
+    int index = time - time2;
     int valseatNum = train.seatTotal - train.seatNum[index][begin];
     // assert(begin != -1);
     Time time3 = time;
+    time3.hour = time2.hour;
+    time3.minute = time2.minute;
     Time time4;
     for (int j = begin; j < train.stationNum; j++) {
       if (j != begin and strcmp(train.stations[j], t.c_str()) != 0) {
         string s2 = train.stations[j];
         sjtu::vector<DemoTrain> dt;
         Time time2 = time3;
-        while (dt.empty() and time2 < max_time) {
+        while (time2 < max_time) {
           dt = _query_train(s2, time2, t);
           for (int k = 0; k < dt.size(); k++) {
             if (strcmp(dt[k].trainID, train.trainID) == 0) {
@@ -173,14 +178,14 @@ int Time::month_day[13] = {0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 int Time::month_days[13] = {0,   0,   31,  60,  91,  121, 152,
                             182, 213, 244, 274, 305, 335};
 int main() {
-  // freopen("../testcases/basic_6/25.in", "r", stdin);
+  // freopen("../testcases/basic_extra/35.in", "r", stdin);
   // freopen("../self.out", "w", stdout);
   memset(max_password, 127, sizeof(max_password));
   max_password[30] = 0;
   memset(max_trainid, 127, sizeof(max_trainid));
   max_trainid[20] = 0;
-  max_time.month = 8;
-  max_time.day = 31;
+  max_time.month = 9;
+  max_time.day = 4;
   max_time.hour = 23;
   max_time.minute = 60;
   max_ind = 0x7fffffff;
@@ -388,7 +393,7 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      if (user_pool[c].privilege < g) {
+      if (user_pool[c].privilege <= g) {
         std::cout << "-1\n";
         continue;
       }
@@ -891,7 +896,9 @@ int main() {
         continue;
       }
       sjtu::vector<DemoOrder2> res4;
-      for (int i = 0; i <= order.end_loc - order.loc; i++) {
+      query_order2.loc = 0;
+      query_order2_max.loc = 0;
+      for (int i = 0; i < train.stationNum; i++) {
         sjtu::vector<DemoOrder2> res3 =
             waiting_list.find(query_order2, query_order2_max);
         for (int j = 0; j < res3.size(); j++) {

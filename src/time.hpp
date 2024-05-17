@@ -46,6 +46,15 @@ struct Time {
     date_month(other.month, other.day, x2);
     return x1 - x2;
   }
+  int sum() const {
+    int x = 0;
+    x += this->minute;
+    x += this->hour * 60;
+    int y = 0;
+    date_month(this->month, this->day, y);
+    x += y * 24 * 60;
+    return x;
+  }
   Time &operator++() {
     this->day++;
     if (day == month_day[month] + 1) {
