@@ -180,6 +180,9 @@ int Time::month_days[13] = {0,   0,   31,  60,  91,  121, 152,
 int main() {
   // freopen("../testcases/basic_extra/35.in", "r", stdin);
   // freopen("../self.out", "w", stdout);
+  cin.tie(0);
+  cout.tie(0);
+  ios::sync_with_stdio(false);
   memset(max_password, 127, sizeof(max_password));
   max_password[30] = 0;
   memset(max_trainid, 127, sizeof(max_trainid));
