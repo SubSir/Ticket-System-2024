@@ -468,7 +468,7 @@ public:
    * return an iterator pointing to the following element.
    * throw index_out_of_bound if ind >= size
    */
-  iterator erase(const size_t &ind) {
+  void erase(const size_t &ind) {
     if (ind >= current_size)
       throw index_out_of_bound();
     delete data[ind];
@@ -479,7 +479,7 @@ public:
     if (current_size < capacity / 4) {
       desize();
     }
-    return iterator(&data, ind, &current_size);
+    return;
   }
   /**
    * adds an element to the end.

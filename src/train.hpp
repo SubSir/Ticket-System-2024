@@ -19,6 +19,30 @@ bool valid_stopoverTimes(int g);
 bool valid_saleDate(const std::string &d);
 bool valid_type(const std::string &t);
 
+struct Index_train {
+  char trainID[21] = {};
+  int pos = 0;
+  bool operator<(const Index_train &rhs) const {
+    int trainID_cmp = std::strcmp(trainID, rhs.trainID);
+    if (trainID_cmp < 0) {
+      return true;
+    } else if (trainID_cmp > 0) {
+      return false;
+    }
+    if (pos < rhs.pos) {
+      return true;
+    } else if (pos > rhs.pos) {
+      return false;
+    }
+    return false;
+  }
+  bool operator>(const Index_train &rhs) const { return rhs < *this; }
+  bool operator>=(const Index_train &rhs) const { return !(*this < rhs); }
+  bool operator<=(const Index_train &rhs) const { return !(rhs < *this); }
+  bool operator!=(const Index_train &rhs) const {
+    return (*this < rhs) or (rhs < *this);
+  }
+};
 struct Train {
   bool release = false;
   char trainID[21] = {};
@@ -280,6 +304,7 @@ struct DemoTrain {
 // 我不能确保你的operator一定正确
 struct DemoTrain2 {
   char trainID[21] = {};
+  char trainID2[21] = {};
   int prices = 0;
   int num = 0;
   int price1 = 0;
@@ -356,10 +381,10 @@ void query_trains(Train *train, Time *date);
 bool buy_ticket(Train &train, const std::string &u, const std::string &i,
                 const std::string &d, const std::string &f,
                 const std::string &t, int n, bool p, Order &order);
-bool buy_ticket(Train &train, const std::string &u, const std::string &i,
-                int dat, int loc, int end_loc, int n, bool p, Order &order);
+bool buy_ticket(Train &train, int dat, int loc, int end_loc, int n);
 bool timecmp(const DemoTrain &a, const DemoTrain &b);
 bool timecmp2(const DemoTrain2 &a, const DemoTrain2 &b);
 bool costcmp(const DemoTrain &a, const DemoTrain &b);
 bool costcmp2(const DemoTrain2 &a, const DemoTrain2 &b);
+bool waitingcmp(const DemoOrder2 &a, const DemoOrder2 &b);
 #endif

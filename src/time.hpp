@@ -15,6 +15,12 @@ struct Time {
     month_date(x, month, day);
   }
   Time() = default;
+  Time(const Time &other) {
+    month = other.month;
+    day = other.day;
+    hour = other.hour;
+    minute = other.minute;
+  }
   Time operator+(const Time &other) const {
     Time result;
     result.minute = this->minute + other.minute;
@@ -48,6 +54,7 @@ struct Time {
     }
     return *this;
   }
+
   static void month_date(int x, int &month, int &day) {
     for (int i = 1; i < 13; i++) {
       if (x <= month_days[i]) {
