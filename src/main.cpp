@@ -188,6 +188,7 @@ int Time::month_day[13] = {0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 int Time::month_days[13] = {0,   0,   31,  60,  91,  121, 152,
                             182, 213, 244, 274, 305, 335};
 int main() {
+  // 虐死萌萌哒评测机~
   cin.tie(0);
   cout.tie(0);
   ios::sync_with_stdio(false);

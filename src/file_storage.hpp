@@ -1276,10 +1276,6 @@ public:
       next = -1;
     }
   };
-  struct rubbish {
-    int pos = 0;
-    rubbish *next = nullptr;
-  };
   struct buffer {
     int pos = 0;
     node *x = nullptr;
@@ -1289,8 +1285,7 @@ public:
   const int Maxlength = 100;
   map<int, buffer *> buffer_map;
   node *root = nullptr;
-  fstream file, binfile;
-  rubbish *_head = nullptr;
+  fstream file;
   vector<node *> line;
   vector<int> _line;
   vector<node *> stack;
@@ -1309,15 +1304,6 @@ public:
     }
     delete root;
     file.close();
-    binfile.open("bin" + filename, ios::out);
-    rubbish *tmp = _head;
-    while (tmp != nullptr) {
-      binfile << tmp->pos << ' ';
-      rubbish *tmp2 = tmp;
-      tmp = tmp->next;
-      delete tmp2;
-    }
-    binfile.close();
   }
   void initial() {
     root = nullptr;
@@ -1328,21 +1314,6 @@ public:
       file.open("BPT" + filename, ios::in | ios::out);
     } else {
       file.open("BPT" + filename, ios::in | ios::out);
-      binfile.open("bin" + filename, ios::in);
-      rubbish *tmp = nullptr;
-      int pos;
-      while (file2 >> pos) {
-        if (_head == nullptr) {
-          _head = new rubbish();
-          _head->pos = pos;
-          tmp = _head;
-        } else {
-          tmp->next = new rubbish();
-          tmp = tmp->next;
-          tmp->pos = pos;
-        }
-      }
-      binfile.close();
       read(0, root);
       file2.close();
     }
@@ -1350,7 +1321,6 @@ public:
   void clear() {
     exit();
     buffer_map.clear();
-    _head = nullptr;
     line.clear();
     _line.clear();
     stack.clear();
@@ -1359,8 +1329,6 @@ public:
     pos.clear();
     file.open("BPT" + filename, ios::out);
     file.close();
-    binfile.open("bin" + filename, ios::out);
-    binfile.close();
     initial();
   }
   void pop() {
@@ -1410,38 +1378,6 @@ public:
     file.write(reinterpret_cast<char *>(x), sizeof(node));
   }
   int append(node *x) {
-    if (_head != nullptr) {
-      int t = _head->pos;
-      rubbish *tmp = _head;
-      _head = _head->next;
-      delete tmp;
-      file.seekp(t);
-      if (buffer_map.find(t) != buffer_map.end()) {
-        buffer *p = buffer_map[t];
-        p->x->is_leaf = x->is_leaf;
-        p->x->size = x->size;
-        for (int i = 0; i < x->size; i++) {
-          p->x->key[i] = x->key[i];
-          p->x->son[i] = x->son[i];
-        }
-        p->x->next = x->next;
-        if (p == head) {
-          return t;
-        }
-        p->pre->next = p->next;
-        if (p != tail) {
-          p->next->pre = p->pre;
-        } else {
-          tail = p->pre;
-        }
-        p->next = head;
-        head->pre = p;
-        head = p;
-        return t;
-      }
-      file.write(reinterpret_cast<char *>(x), sizeof(node));
-      return t;
-    }
     file.seekp(0, ios::end);
     int t = file.tellp();
     if (buffer_map.find(t) != buffer_map.end()) {
@@ -1507,12 +1443,6 @@ public:
     if (length == Maxlength) {
       pop();
     }
-  }
-  void recycle(int pos) {
-    rubbish *tmp = new rubbish();
-    tmp->pos = pos;
-    tmp->next = _head;
-    _head = tmp;
   }
   void insert(T &x) {
     line.clear();
@@ -1788,7 +1718,6 @@ public:
           return;
         }
         if (tmp_node->size == 0 and tmp_pos > 0) {
-          recycle(_line[tmp_pos]);
           stack[tail] = line[tmp_pos - 1];
           stack_key[tail] = new T(*tmp_t);
           pos[tail] = tmp_pos - 1;
@@ -1870,7 +1799,6 @@ public:
             line[tmp_pos]->son[line[tmp_pos]->size] = next->son[i];
             line[tmp_pos]->size++;
           }
-          recycle(line[tmp_pos]->next);
           line[tmp_pos]->next = next->next;
           write(_line[tmp_pos], line[tmp_pos]);
           stack[tail] = line[tmp_pos - 1];
