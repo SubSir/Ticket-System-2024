@@ -1286,7 +1286,7 @@ public:
     buffer *pre = nullptr, *next = nullptr;
   } *head = nullptr, *tail = nullptr;
   int length = 0;
-  const int Maxlength = 1000;
+  const int Maxlength = 100;
   map<int, buffer *> buffer_map;
   node *root = nullptr;
   fstream file, binfile;
@@ -2058,7 +2058,7 @@ private:
     buffer *pre = nullptr, *next = nullptr;
   } *head = nullptr, *tail = nullptr;
   int length = 0;
-  const int Maxlength = 1000;
+  const int Maxlength = 400;
   map<int, buffer *> buffer_map;
 
 public:

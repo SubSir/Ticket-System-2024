@@ -63,7 +63,14 @@ struct Time {
     }
     return *this;
   }
-
+  Time &operator--() {
+    this->day--;
+    if (day == 0) {
+      month--;
+      day = month_day[month];
+    }
+    return *this;
+  }
   static void month_date(int x, int &month, int &day) {
     for (int i = 1; i < 13; i++) {
       if (x <= month_days[i]) {
