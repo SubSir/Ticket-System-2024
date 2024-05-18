@@ -22,6 +22,7 @@ bool valid_type(const std::string &t);
 struct Index_train {
   char trainID[21] = {};
   int pos = 0;
+  Index_train() { std::memset(this, 0, sizeof(Index_train)); }
   bool operator<(const Index_train &rhs) const {
     int trainID_cmp = std::strcmp(trainID, rhs.trainID);
     if (trainID_cmp < 0) {
@@ -339,6 +340,7 @@ struct DateLocation_Train {
   Time date = {};
   char to[31] = {};
   char trainID[21] = {};
+  DateLocation_Train() { std::memset(this, 0, sizeof(DateLocation_Train)); }
   bool operator<(const DateLocation_Train &rhs) const {
     int to_cmp = std::strcmp(to, rhs.to);
     if (to_cmp < 0) {

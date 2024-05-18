@@ -9,6 +9,32 @@ bool valid_password(const std::string &p);
 bool valid_name(const std::string &n);
 bool valid_privilege(int g);
 
+struct Index_user {
+  char username[21] = {};
+  int privilege = 0;
+  int pos = 0;
+  Index_user() { std::memset(this, 0, sizeof(Index_user)); }
+  bool operator<(const Index_user &rhs) const {
+    int username_cmp = std::strcmp(username, rhs.username);
+    if (username_cmp < 0) {
+      return true;
+    } else if (username_cmp > 0) {
+      return false;
+    }
+    if (pos < rhs.pos) {
+      return true;
+    } else {
+      return false;
+    }
+    return false;
+  }
+  bool operator>(const Index_user &rhs) const { return rhs < *this; }
+  bool operator>=(const Index_user &rhs) const { return !(*this < rhs); }
+  bool operator<=(const Index_user &rhs) const { return !(rhs < *this); }
+  bool operator!=(const Index_user &rhs) const {
+    return (*this < rhs) or (rhs < *this);
+  }
+};
 struct User {
   char username[21] = {};
   char password[31] = {};

@@ -1262,7 +1262,7 @@ public:
 #endif
 
 using namespace sjtu;
-template <class T, int degree = 100> class BPT {
+template <class T, int degree = 40> class BPT {
 public:
   struct node {
     bool is_leaf;
@@ -1270,7 +1270,6 @@ public:
     int size;
     int son[degree];
     int next;
-
     node() {
       std::memset(this, 0, sizeof(node));
       is_leaf = false;
@@ -1370,8 +1369,6 @@ public:
     length--;
     buffer *tmp = tail;
     buffer_map.erase(buffer_map.find(tail->pos));
-    file.seekp(tail->pos);
-    file.write(reinterpret_cast<char *>(tail->x), sizeof(node));
     if (head == tail) {
       delete tail->x;
       delete tail;
@@ -2057,6 +2054,14 @@ private:
   fstream file;
   string file_name;
   int sizeofT = sizeof(T);
+  struct buffer {
+    int pos = 0;
+    T x = {};
+    buffer *pre = nullptr, *next = nullptr;
+  } *head = nullptr, *tail = nullptr;
+  int length = 0;
+  const int Maxlength = 1000;
+  map<int, buffer *> buffer_map;
 
 public:
   MemoryRiver() = default;
@@ -2064,7 +2069,32 @@ public:
   MemoryRiver(const string &file_name) : file_name(file_name + "river") {
     initialise();
   }
+  ~MemoryRiver() {
+    while (length)
+      pop();
+    file.close();
+  }
+  void pop() {
+    if (length == 0)
+      return;
+    length--;
+    buffer *tmp = tail;
+    buffer_map.erase(buffer_map.find(tail->pos));
+    file.seekp(tail->pos * sizeofT + info_len * sizeof(int));
+    file.write(reinterpret_cast<char *>(&tail->x), sizeof(T));
+    if (head == tail) {
+      delete tail;
+      head = tail = nullptr;
+      return;
+    }
+    tail = tail->pre;
+    if (tail != nullptr)
+      tail->next = nullptr;
+    delete tmp;
+  }
   void clear() {
+    while (length)
+      pop();
     file.close();
     file.open(file_name, std::ios::out);
     int tmp = 0;
@@ -2118,14 +2148,60 @@ public:
 
   //用t的值更新位置索引index对应的对象，保证调用的index都是由write函数产生
   void update(T &t, const int index) {
+    if (buffer_map.find(index) != buffer_map.end()) {
+      buffer *tmp = buffer_map[index];
+      tmp->x = t;
+      if (tmp == head)
+        return;
+      tmp->pre->next = tmp->next;
+      if (tmp != tail)
+        tmp->next->pre = tmp->pre;
+      else
+        tail = tmp->pre;
+      tmp->next = head;
+      head->pre = tmp;
+      head = tmp;
+      return;
+    }
     file.seekp(index * sizeofT + info_len * sizeof(int));
     file.write(reinterpret_cast<char *>(&t), sizeof(T));
   }
 
   //读出位置索引index对应的T对象的值并赋值给t，保证调用的index都是由write函数产生
   void read(T &t, const int index) {
+    if (buffer_map.find(index) != buffer_map.end()) {
+      buffer *tmp = buffer_map[index];
+      t = tmp->x;
+      if (tmp == head)
+        return;
+      tmp->pre->next = tmp->next;
+      if (tmp != tail)
+        tmp->next->pre = tmp->pre;
+      else
+        tail = tmp->pre;
+      tmp->next = head;
+      head->pre = tmp;
+      head = tmp;
+      return;
+    }
     file.seekg(index * sizeofT + info_len * sizeof(int));
     file.read(reinterpret_cast<char *>(&t), sizeof(T));
+    buffer *tmp = new buffer;
+    tmp->pos = index;
+    tmp->x = t;
+    tmp->next = head;
+    if (head != nullptr) {
+      head->pre = tmp;
+    }
+    head = tmp;
+    if (tail == nullptr) {
+      tail = tmp;
+    }
+    length++;
+    buffer_map.insert(pair<int, buffer *>(index, tmp));
+    if (length == Maxlength) {
+      pop();
+    }
   }
 
   //删除位置索引index对应的对象(不涉及空间回收时，可忽略此函数)，保证调用的index都是由write函数产生

@@ -2,7 +2,6 @@
 #include "time.hpp"
 #include "train.hpp"
 #include "user.hpp"
-#include <cassert>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -12,14 +11,15 @@ char max_password[31];
 char max_trainid[21];
 Time max_time;
 int max_ind;
-BPT<User> user_table("_user");
+BPT<Index_user> user_table("_user");
 BPT<Index_train> train_table("_train");
 BPT<DateLocation_Train> date_location_train_table("_date_location_train");
 BPT<DemoOrder> order_table("_order");
 BPT<DemoOrder2> waiting_list("_waiting_list");
-sjtu::map<std::string, User> user_pool;
+sjtu::map<std::string, Index_user> user_pool;
 MemoryRiver<Order> order_river("order_");
 MemoryRiver<Train> train_river("train_");
+MemoryRiver<User> user_river("user_");
 sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t) {
   DateLocation_Train query_dlt, query_dlt_max;
   strcpy(query_dlt.to, s.c_str());
@@ -58,7 +58,6 @@ sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t) {
       time2 += train.stopoverTimes[j];
     }
     int index = time - time2;
-    // assert(begin != -1);
     int valseatNum = train.seatTotal - train.seatNum[index][begin];
     Time time3;
     for (int j = begin; j < train.stationNum; j++) {
@@ -178,11 +177,11 @@ int Time::month_day[13] = {0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 int Time::month_days[13] = {0,   0,   31,  60,  91,  121, 152,
                             182, 213, 244, 274, 305, 335};
 int main() {
-  // freopen("../testcases/basic_extra/35.in", "r", stdin);
-  // freopen("../self.out", "w", stdout);
   cin.tie(0);
   cout.tie(0);
   ios::sync_with_stdio(false);
+  // freopen("../testcases/basic_2/2.in", "r", stdin);
+  // freopen("../self.out", "w", stdout);
   memset(max_password, 127, sizeof(max_password));
   max_password[30] = 0;
   memset(max_trainid, 127, sizeof(max_trainid));
@@ -216,26 +215,19 @@ int main() {
       std::getline(std::cin, line);
       std::istringstream iss(line);
       std::string c, u, p, n, m;
-      int cnt = 0, cnt2 = 0;
       int g;
       while (getline(iss, in, ' ')) {
         if (in == "-c") {
-          cnt++;
           getline(iss, c, ' ');
         } else if (in == "-u") {
-          cnt2++;
           getline(iss, u, ' ');
         } else if (in == "-p") {
-          cnt2++;
           getline(iss, p, ' ');
         } else if (in == "-n") {
-          cnt2++;
           getline(iss, n, ' ');
         } else if (in == "-m") {
-          cnt2++;
           getline(iss, m, ' ');
         } else if (in == "-g") {
-          cnt++;
           getline(iss, i, ' ');
           g = stoi(i);
         }
@@ -243,10 +235,6 @@ int main() {
       int o = -1;
       order_river.get_info(o, 1);
       if (o == 0) {
-        if (cnt2 != 4) {
-          std::cout << "-1\n";
-          continue;
-        }
         g = 10;
       } else {
         if (user_pool.find(c) == user_pool.end()) {
@@ -257,14 +245,10 @@ int main() {
           std::cout << "-1\n";
           continue;
         }
-        if (cnt + cnt2 != 6) {
-          std::cout << "-1\n";
-          continue;
-        }
-        User user_min, user_max;
+        Index_user user_min, user_max;
         strcpy(user_min.username, u.c_str());
         strcpy(user_max.username, u.c_str());
-        strcpy(user_max.password, max_password);
+        user_max.pos = max_ind;
         if (!user_table.find(user_min, user_max).empty()) {
           std::cout << "-1\n";
           continue;
@@ -276,7 +260,11 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      user_table.insert(new_user);
+      Index_user index_user;
+      strcpy(index_user.username, u.c_str());
+      index_user.privilege = g;
+      index_user.pos = user_river.write(new_user);
+      user_table.insert(index_user);
       o++;
       order_river.write_info(o, 1);
       std::cout << "0\n";
@@ -285,29 +273,29 @@ int main() {
       std::getline(std::cin, line);
       std::istringstream iss(line);
       std::string u, p;
-      int cnt = 0;
       while (getline(iss, in, ' ')) {
         if (in == "-u") {
-          cnt++;
           getline(iss, u, ' ');
         } else if (in == "-p") {
-          cnt++;
           getline(iss, p, ' ');
         }
-      }
-      if (cnt != 2) {
-        std::cout << "-1\n";
-        continue;
       }
       if (user_pool.find(u) != user_pool.end()) {
         std::cout << "-1\n";
         continue;
       }
-      User user;
-      strcpy(user.username, u.c_str());
-      strcpy(user.password, p.c_str());
-      sjtu::vector<User> res = user_table.find(user, user);
+      Index_user user_min, user_max;
+      strcpy(user_min.username, u.c_str());
+      strcpy(user_max.username, u.c_str());
+      user_max.pos = max_ind;
+      sjtu::vector<Index_user> res = user_table.find(user_min, user_max);
       if (res.empty()) {
+        std::cout << "-1\n";
+        continue;
+      }
+      User user;
+      user_river.read(user, res[0].pos);
+      if (strcmp(user.password, p.c_str()) != 0) {
         std::cout << "-1\n";
         continue;
       }
@@ -318,16 +306,10 @@ int main() {
       std::getline(std::cin, line);
       std::istringstream iss(line);
       std::string u;
-      int cnt = 0;
       while (getline(iss, in, ' ')) {
         if (in == "-u") {
-          cnt++;
           getline(iss, u, ' ');
         }
-      }
-      if (cnt != 1) {
-        std::cout << "-1\n";
-        continue;
       }
       if (user_pool.find(u) == user_pool.end()) {
         std::cout << "-1\n";
@@ -340,36 +322,31 @@ int main() {
       std::getline(std::cin, line);
       std::istringstream iss(line);
       std::string u, c;
-      int cnt = 0;
       while (getline(iss, in, ' ')) {
         if (in == "-u") {
-          cnt++;
           getline(iss, u, ' ');
         } else if (in == "-c") {
-          cnt++;
           getline(iss, c, ' ');
         }
-      }
-      if (cnt != 2) {
-        std::cout << "-1\n";
-        continue;
       }
       if (user_pool.find(c) == user_pool.end()) {
         std::cout << "-1\n";
         continue;
       }
-      User query_user, query_user_max;
+      Index_user query_user, query_user_max;
       strcpy(query_user.username, u.c_str());
       strcpy(query_user_max.username, u.c_str());
-      strcpy(query_user_max.password, max_password);
-      sjtu::vector<User> res = user_table.find(query_user, query_user_max);
+      query_user_max.pos = max_ind;
+      sjtu::vector<Index_user> res =
+          user_table.find(query_user, query_user_max);
       if (res.empty() or
           (res[0].privilege >= user_pool[c].privilege and u != c)) {
         std::cout << "-1\n";
         continue;
       }
-      // assert(res.size() == 1);
-      query_profile(&res[0]);
+      User user;
+      user_river.read(user, res[0].pos);
+      query_profile(&user);
     } else if (command == "modify_profile") {
       std::string line;
       std::getline(std::cin, line);
@@ -400,72 +377,59 @@ int main() {
         std::cout << "-1\n";
         continue;
       }
-      User query_user, query_user_max;
+      Index_user query_user, query_user_max;
       strcpy(query_user.username, u.c_str());
       strcpy(query_user_max.username, u.c_str());
-      strcpy(query_user_max.password, max_password);
-      sjtu::vector<User> res = user_table.find(query_user, query_user_max);
+      query_user_max.pos = max_ind;
+      sjtu::vector<Index_user> res =
+          user_table.find(query_user, query_user_max);
       if (res.empty() or
           (res[0].privilege >= user_pool[c].privilege and u != c)) {
         std::cout << "-1\n";
         continue;
       }
-      // assert(res.size() == 1);
-      user_table.erase(res[0]);
-      if (!modify_profile(&res[0], p, n, m, g)) {
+      User user;
+      user_river.read(user, res[0].pos);
+      if (!modify_profile(&user, p, n, m, g)) {
         std::cout << "-1\n";
         continue;
       }
-      user_table.insert(res[0]);
+      res[0].privilege = user.privilege;
       if (user_pool.find(u) != user_pool.end()) {
         user_pool[u] = res[0];
       }
+      user_river.update(user, res[0].pos);
     } else if (command == "add_train") {
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
       std::string c;
-      int cnt = 0;
       while (getline(iss, in, ' ')) {
         if (in == "-i") {
-          cnt++;
           getline(iss, c, ' ');
         } else if (in == "-n") {
-          cnt++;
           getline(iss, i, ' ');
           n = stoi(i);
         } else if (in == "-m") {
-          cnt++;
           getline(iss, i, ' ');
           m = stoi(i);
         } else if (in == "-s") {
-          cnt++;
           getline(iss, s, ' ');
         } else if (in == "-p") {
-          cnt++;
           getline(iss, p, ' ');
         } else if (in == "-x") {
-          cnt++;
           getline(iss, x, ' ');
         } else if (in == "-t") {
-          cnt++;
           getline(iss, t, ' ');
         } else if (in == "-o") {
-          cnt++;
           getline(iss, o, ' ');
         } else if (in == "-d") {
-          cnt++;
           getline(iss, d, ' ');
         } else if (in == "-y") {
-          cnt++;
           getline(iss, y, ' ');
         }
       }
       i = c;
-      if (cnt != 10) {
-        std::cout << "-1\n";
-        continue;
-      }
       Train new_train;
       bool bl = add_train(i, n, m, s, p, x, t, o, d, y, new_train);
       if (!bl) {
@@ -491,16 +455,10 @@ int main() {
       std::getline(std::cin, line);
       std::istringstream iss(line);
       std::string i, c;
-      int cnt = 0;
       while (getline(iss, in, ' ')) {
         if (in == "-i") {
-          cnt++;
           getline(iss, i, ' ');
         }
-      }
-      if (cnt != 1) {
-        std::cout << "-1\n";
-        continue;
       }
       Index_train query_train, query_train_max;
       strcpy(query_train.trainID, i.c_str());
@@ -538,20 +496,13 @@ int main() {
       std::getline(std::cin, line);
       std::istringstream iss(line);
       std::string i, c;
-      int cnt = 0;
       while (getline(iss, in, ' ')) {
         if (in == "-i") {
-          cnt++;
           getline(iss, i, ' ');
         }
         if (in == "-d") {
-          cnt++;
           getline(iss, c, ' ');
         }
-      }
-      if (cnt != 2) {
-        std::cout << "-1\n";
-        continue;
       }
       Time t;
       t.month = stoi(c.substr(0, 2));
@@ -578,16 +529,10 @@ int main() {
       std::getline(std::cin, line);
       std::istringstream iss(line);
       std::string i;
-      int cnt = 0;
       while (getline(iss, in, ' ')) {
         if (in == "-i") {
-          cnt++;
           getline(iss, i, ' ');
         }
-      }
-      if (cnt != 1) {
-        std::cout << "-1\n";
-        continue;
       }
       Index_train query_train, query_train_max;
       strcpy(query_train.trainID, i.c_str());
@@ -613,27 +558,19 @@ int main() {
       std::getline(std::cin, line);
       std::istringstream iss(line);
       std::string s, t, d, p = "time";
-      int cnt = 0;
       while (getline(iss, in, ' ')) {
         if (in == "-s") {
-          cnt++;
           getline(iss, s, ' ');
         }
         if (in == "-t") {
-          cnt++;
           getline(iss, t, ' ');
         }
         if (in == "-d") {
-          cnt++;
           getline(iss, d, ' ');
         }
         if (in == "-p") {
           getline(iss, p, ' ');
         }
-      }
-      if (cnt != 3) {
-        std::cout << "-1\n";
-        continue;
       }
       Time time;
       time.month = stoi(d.substr(0, 2));
@@ -655,27 +592,19 @@ int main() {
       std::getline(std::cin, line);
       std::istringstream iss(line);
       std::string s, t, d, p = "time";
-      int cnt = 0;
       while (getline(iss, in, ' ')) {
         if (in == "-s") {
-          cnt++;
           getline(iss, s, ' ');
         }
         if (in == "-t") {
-          cnt++;
           getline(iss, t, ' ');
         }
         if (in == "-d") {
-          cnt++;
           getline(iss, d, ' ');
         }
         if (in == "-p") {
           getline(iss, p, ' ');
         }
-      }
-      if (cnt != 3) {
-        std::cout << "-1\n";
-        continue;
       }
       Time time;
       time.month = stoi(d.substr(0, 2));
@@ -703,31 +632,24 @@ int main() {
       std::string u, i, d, s, f, t;
       bool q = false;
       int n = -1;
-      int cnt = 0;
       while (getline(iss, in, ' ')) {
         if (in == "-u") {
-          cnt++;
           getline(iss, u, ' ');
         }
         if (in == "-i") {
-          cnt++;
           getline(iss, i, ' ');
         }
         if (in == "-d") {
-          cnt++;
           getline(iss, d, ' ');
         }
         if (in == "-n") {
-          cnt++;
           getline(iss, s, ' ');
           n = stoi(s);
         }
         if (in == "-f") {
-          cnt++;
           getline(iss, f, ' ');
         }
         if (in == "-t") {
-          cnt++;
           getline(iss, t, ' ');
         }
         if (in == "-q") {
@@ -735,10 +657,6 @@ int main() {
           if (s == "true")
             q = true;
         }
-      }
-      if (cnt != 6) {
-        std::cout << "-1\n";
-        continue;
       }
       if (user_pool.find(u) == user_pool.end()) {
         std::cout << "-1\n";
@@ -794,16 +712,10 @@ int main() {
       std::getline(std::cin, line);
       std::istringstream iss(line);
       std::string u;
-      int cnt = 0;
       while (getline(iss, in, ' ')) {
         if (in == "-u") {
-          cnt++;
           getline(iss, u, ' ');
         }
-      }
-      if (cnt != 1) {
-        std::cout << "-1\n";
-        continue;
       }
       if (user_pool.find(u) == user_pool.end()) {
         std::cout << "-1\n";
@@ -827,20 +739,14 @@ int main() {
       std::istringstream iss(line);
       std::string u, s;
       int n = 1;
-      int cnt = 0;
       while (getline(iss, in, ' ')) {
         if (in == "-u") {
-          cnt++;
           getline(iss, u, ' ');
         }
         if (in == "-n") {
           getline(iss, s, ' ');
           n = stoi(s);
         }
-      }
-      if (cnt != 1) {
-        std::cout << "-1\n";
-        continue;
       }
       if (user_pool.find(u) == user_pool.end()) {
         std::cout << "-1\n";
