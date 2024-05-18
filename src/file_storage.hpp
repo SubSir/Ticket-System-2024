@@ -1262,7 +1262,7 @@ public:
 #endif
 
 using namespace sjtu;
-template <class T, int degree = 40> class BPT {
+template <class T, int degree = 70> class BPT {
 public:
   struct node {
     bool is_leaf;
@@ -1304,6 +1304,9 @@ public:
   }
   ~BPT() { exit(); }
   void exit() {
+    while (length) {
+      pop();
+    }
     delete root;
     file.close();
     binfile.open("bin" + filename, ios::out);
@@ -1315,9 +1318,6 @@ public:
       delete tmp2;
     }
     binfile.close();
-    while (length) {
-      pop();
-    }
   }
   void initial() {
     root = nullptr;
@@ -1369,6 +1369,8 @@ public:
     length--;
     buffer *tmp = tail;
     buffer_map.erase(buffer_map.find(tail->pos));
+    file.seekp(tmp->pos);
+    file.write(reinterpret_cast<char *>(tmp->x), sizeof(node));
     if (head == tail) {
       delete tail->x;
       delete tail;
@@ -1392,8 +1394,6 @@ public:
       }
       tmp->x->next = x->next;
       if (tmp == head) {
-        file.seekp(pos);
-        file.write(reinterpret_cast<char *>(x), sizeof(node));
         return;
       }
       tmp->pre->next = tmp->next;
@@ -1404,8 +1404,6 @@ public:
       tmp->next = head;
       head->pre = tmp;
       head = tmp;
-      file.seekp(pos);
-      file.write(reinterpret_cast<char *>(x), sizeof(node));
       return;
     }
     file.seekp(pos);
@@ -1418,7 +1416,6 @@ public:
       _head = _head->next;
       delete tmp;
       file.seekp(t);
-      file.write(reinterpret_cast<char *>(x), sizeof(node));
       if (buffer_map.find(t) != buffer_map.end()) {
         buffer *p = buffer_map[t];
         p->x->is_leaf = x->is_leaf;
@@ -1442,11 +1439,11 @@ public:
         head = p;
         return t;
       }
+      file.write(reinterpret_cast<char *>(x), sizeof(node));
       return t;
     }
     file.seekp(0, ios::end);
     int t = file.tellp();
-    file.write(reinterpret_cast<char *>(x), sizeof(node));
     if (buffer_map.find(t) != buffer_map.end()) {
       buffer *p = buffer_map[t];
       p->x->is_leaf = x->is_leaf;
@@ -1470,6 +1467,7 @@ public:
       head = p;
       return t;
     }
+    file.write(reinterpret_cast<char *>(x), sizeof(node));
     return t;
   }
   void read(int pos, node *&x) {
