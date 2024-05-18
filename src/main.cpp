@@ -203,8 +203,8 @@ int main() {
   cin.tie(0);
   cout.tie(0);
   ios::sync_with_stdio(false);
-  // freopen("../testcases/basic_extra/33.in", "r", stdin);
-  // freopen("../self.out", "w", stdout);
+  //  freopen("../testcases/basic_1/1.in", "r", stdin);
+  //  freopen("../self.out", "w", stdout);
   memset(max_password, 127, sizeof(max_password));
   max_password[30] = 0;
   memset(max_trainid, 127, sizeof(max_trainid));
@@ -216,12 +216,12 @@ int main() {
   max_time.hour = 23;
   max_time.minute = 60;
   max_ind = 0x7fffffff;
-  std::string i, s, p, x, t, o, d, y, in;
+  std::string in;
   int n, m;
   string index, command;
   int ind = -1;
+  cin >> index;
   while (true) {
-    cin >> index;
     cin >> command;
     cout << index << " ";
     if (command[0] == 'e') { // exit
@@ -236,27 +236,26 @@ int main() {
       order_river.clear();
       user_pool.clear();
     } else if (command[0] == 'a' and command[4] == 'u') { // add_user
-      std::string line;
-      std::getline(std::cin, line);
-      std::istringstream iss(line);
       std::string c, u, p, n, m;
       int g;
-      while (getline(iss, in, ' ')) {
+      do {
+        cin >> in;
         if (in == "-c") {
-          getline(iss, c, ' ');
+          cin >> c;
         } else if (in == "-u") {
-          getline(iss, u, ' ');
+          cin >> u;
         } else if (in == "-p") {
-          getline(iss, p, ' ');
+          cin >> p;
         } else if (in == "-n") {
-          getline(iss, n, ' ');
+          cin >> n;
         } else if (in == "-m") {
-          getline(iss, m, ' ');
+          cin >> m;
         } else if (in == "-g") {
-          getline(iss, i, ' ');
-          g = stoi(i);
+          cin >> g;
+        } else if (in.length() > 0 and in[0] == '[') {
+          index = in;
         }
-      }
+      } while (in.length() > 0 and in[0] != '[');
       int o = -1;
       order_river.get_info(o, 1);
       if (o == 0) {
@@ -294,17 +293,17 @@ int main() {
       order_river.write_info(o, 1);
       std::cout << "0\n";
     } else if (command[0] == 'l' and command[3] == 'i') { // login
-      std::string line;
-      std::getline(std::cin, line);
-      std::istringstream iss(line);
       std::string u, p;
-      while (getline(iss, in, ' ')) {
+      do {
+        cin >> in;
         if (in == "-u") {
-          getline(iss, u, ' ');
+          cin >> u;
         } else if (in == "-p") {
-          getline(iss, p, ' ');
+          cin >> p;
+        } else if (in.length() > 0 and in[0] == '[') {
+          index = in;
         }
-      }
+      } while (in.length() > 0 and in[0] != '[');
       if (user_pool.find(u) != user_pool.end()) {
         std::cout << "-1\n";
         continue;
@@ -327,15 +326,15 @@ int main() {
       user_pool[u] = res[0];
       std::cout << "0\n";
     } else if (command[0] == 'l' and command[3] == 'o') { // logout
-      std::string line;
-      std::getline(std::cin, line);
-      std::istringstream iss(line);
       std::string u;
-      while (getline(iss, in, ' ')) {
+      do {
+        cin >> in;
         if (in == "-u") {
-          getline(iss, u, ' ');
+          cin >> u;
+        } else if (in.length() > 0 and in[0] == '[') {
+          index = in;
         }
-      }
+      } while (in.length() > 0 and in[0] != '[');
       if (user_pool.find(u) == user_pool.end()) {
         std::cout << "-1\n";
         continue;
@@ -343,57 +342,66 @@ int main() {
       user_pool.erase(user_pool.find(u));
       std::cout << "0\n";
     } else if (command[0] == 'q' and command[6] == 'p') { // query_profile
-      std::string line;
-      std::getline(std::cin, line);
-      std::istringstream iss(line);
       std::string u, c;
-      while (getline(iss, in, ' ')) {
+      do {
+        cin >> in;
         if (in == "-u") {
-          getline(iss, u, ' ');
+          cin >> u;
         } else if (in == "-c") {
-          getline(iss, c, ' ');
+          cin >> c;
+        } else if (in.length() > 0 and in[0] == '[') {
+          index = in;
         }
-      }
+      } while (in.length() > 0 and in[0] != '[');
       if (user_pool.find(c) == user_pool.end()) {
         std::cout << "-1\n";
         continue;
       }
-      Index_user query_user, query_user_max;
-      strcpy(query_user.username, u.c_str());
-      strcpy(query_user_max.username, u.c_str());
-      query_user_max.pos = max_ind;
-      sjtu::vector<Index_user> res =
-          user_table.find(query_user, query_user_max);
-      if (res.empty() or
-          (res[0].privilege >= user_pool[c].privilege and u != c)) {
-        std::cout << "-1\n";
-        continue;
-      }
-      User user;
-      user_river.read(user, res[0].pos);
-      query_profile(&user);
-    } else if (command[0] == 'm') { // modify_profile
-      std::string line;
-      std::getline(std::cin, line);
-      std::istringstream iss(line);
-      std::string u, p, n, m, c;
-      int g = -1;
-      while (getline(iss, in, ' ')) {
-        if (in == "-u") {
-          getline(iss, u, ' ');
-        } else if (in == "-p") {
-          getline(iss, p, ' ');
-        } else if (in == "-n") {
-          getline(iss, n, ' ');
-        } else if (in == "-m") {
-          getline(iss, m, ' ');
-        } else if (in == "-c") {
-          getline(iss, c, ' ');
-        } else if (in == "-g") {
-          getline(iss, i, ' ');
-          g = stoi(i);
+      int index = -1;
+      if (user_pool.find(u) == user_pool.end()) {
+        Index_user query_user, query_user_max;
+        strcpy(query_user.username, u.c_str());
+        strcpy(query_user_max.username, u.c_str());
+        query_user_max.pos = max_ind;
+        sjtu::vector<Index_user> res =
+            user_table.find(query_user, query_user_max);
+        if (res.empty() or
+            (res[0].privilege >= user_pool[c].privilege and u != c)) {
+          std::cout << "-1\n";
+          continue;
+        }
+        index = res[0].pos;
+      } else {
+        index = user_pool[u].pos;
+        if (user_pool[u].privilege >= user_pool[c].privilege and u != c) {
+          std::cout << "-1\n";
+          continue;
         }
       }
+      User user;
+      user_river.read(user, index);
+      query_profile(&user);
+    } else if (command[0] == 'm') { // modify_profile
+      std::string u, p, n, m, c;
+      int g = -1;
+      do {
+        cin >> in;
+        if (in == "-u") {
+          cin >> u;
+        } else if (in == "-p") {
+          cin >> p;
+        } else if (in == "-n") {
+          cin >> n;
+        } else if (in == "-m") {
+          cin >> m;
+        } else if (in == "-g") {
+          cin >> g;
+        } else if (in == "-c") {
+          cin >> c;
+        } else if (in.length() > 0 and in[0] == '[') {
+          index = in;
+        }
+      } while (in.length() > 0 and in[0] != '[');
       if (user_pool.find(c) == user_pool.end()) {
         std::cout << "-1\n";
         continue;
@@ -425,36 +433,34 @@ int main() {
       }
       user_river.update(user, res[0].pos);
     } else if (command[0] == 'a' and command[4] == 't') { // add_train
-      std::string line;
-      std::getline(std::cin, line);
-      std::istringstream iss(line);
-      std::string c;
-      while (getline(iss, in, ' ')) {
+      std::string i, p, x, t, o, d, y, s;
+      int n, m;
+      do {
+        cin >> in;
         if (in == "-i") {
-          getline(iss, c, ' ');
+          cin >> i;
         } else if (in == "-n") {
-          getline(iss, i, ' ');
-          n = stoi(i);
+          cin >> n;
         } else if (in == "-m") {
-          getline(iss, i, ' ');
-          m = stoi(i);
+          cin >> m;
         } else if (in == "-s") {
-          getline(iss, s, ' ');
+          cin >> s;
         } else if (in == "-p") {
-          getline(iss, p, ' ');
+          cin >> p;
         } else if (in == "-x") {
-          getline(iss, x, ' ');
+          cin >> x;
         } else if (in == "-t") {
-          getline(iss, t, ' ');
+          cin >> t;
         } else if (in == "-o") {
-          getline(iss, o, ' ');
+          cin >> o;
         } else if (in == "-d") {
-          getline(iss, d, ' ');
+          cin >> d;
         } else if (in == "-y") {
-          getline(iss, y, ' ');
+          cin >> y;
+        } else if (in.length() > 0 and in[0] == '[') {
+          index = in;
         }
-      }
-      i = c;
+      } while (in.length() > 0 and in[0] != '[');
       Train new_train;
       bool bl = add_train(i, n, m, s, p, x, t, o, d, y, new_train);
       if (!bl) {
@@ -476,15 +482,15 @@ int main() {
       train_table.insert(index_train);
       cout << "0\n";
     } else if (command[0] == 'r' and command[2] == 'l') { // release_train
-      std::string line;
-      std::getline(std::cin, line);
-      std::istringstream iss(line);
-      std::string i, c;
-      while (getline(iss, in, ' ')) {
+      std::string i;
+      do {
+        cin >> in;
         if (in == "-i") {
-          getline(iss, i, ' ');
+          cin >> i;
+        } else if (in.length() > 0 and in[0] == '[') {
+          index = in;
         }
-      }
+      } while (in.length() > 0 and in[0] != '[');
       Index_train query_train, query_train_max;
       strcpy(query_train.trainID, i.c_str());
       strcpy(query_train_max.trainID, i.c_str());
@@ -512,18 +518,17 @@ int main() {
       }
       cout << "0\n";
     } else if (command[0] == 'q' and command[8] == 'a') { // query_train
-      std::string line;
-      std::getline(std::cin, line);
-      std::istringstream iss(line);
       std::string i, c;
-      while (getline(iss, in, ' ')) {
+      do {
+        cin >> in;
         if (in == "-i") {
-          getline(iss, i, ' ');
+          cin >> i;
+        } else if (in == "-d") {
+          cin >> c;
+        } else if (in.length() > 0 and in[0] == '[') {
+          index = in;
         }
-        if (in == "-d") {
-          getline(iss, c, ' ');
-        }
-      }
+      } while (in.length() > 0 and in[0] != '[');
       Time t;
       t.month = stoi(c.substr(0, 2));
       t.day = stoi(c.substr(3, 2));
@@ -545,15 +550,15 @@ int main() {
       }
       query_trains(&train, &t);
     } else if (command[0] == 'd') { // delete_train
-      std::string line;
-      std::getline(std::cin, line);
-      std::istringstream iss(line);
       std::string i;
-      while (getline(iss, in, ' ')) {
+      do {
+        cin >> in;
         if (in == "-i") {
-          getline(iss, i, ' ');
+          cin >> i;
+        } else if (in.length() > 0 and in[0] == '[') {
+          index = in;
         }
-      }
+      } while (in.length() > 0 and in[0] != '[');
       Index_train query_train, query_train_max;
       strcpy(query_train.trainID, i.c_str());
       strcpy(query_train_max.trainID, i.c_str());
@@ -570,24 +575,21 @@ int main() {
       std::cout << "0\n";
       continue;
     } else if (command[0] == 'q' and command[7] == 'i') { // query_ticket
-      std::string line;
-      std::getline(std::cin, line);
-      std::istringstream iss(line);
       std::string s, t, d, p = "time";
-      while (getline(iss, in, ' ')) {
+      do {
+        cin >> in;
         if (in == "-s") {
-          getline(iss, s, ' ');
+          cin >> s;
+        } else if (in == "-t") {
+          cin >> t;
+        } else if (in == "-d") {
+          cin >> d;
+        } else if (in == "-p") {
+          cin >> p;
+        } else if (in.length() > 0 and in[0] == '[') {
+          index = in;
         }
-        if (in == "-t") {
-          getline(iss, t, ' ');
-        }
-        if (in == "-d") {
-          getline(iss, d, ' ');
-        }
-        if (in == "-p") {
-          getline(iss, p, ' ');
-        }
-      }
+      } while (in.length() > 0 and in[0] != '[');
       Time time;
       time.month = stoi(d.substr(0, 2));
       time.day = stoi(d.substr(3, 2));
@@ -606,24 +608,21 @@ int main() {
              << ' ' << res3[i].num << '\n';
       }
     } else if (command[0] == 'q' and command[8] == 'n') { // query_transfer
-      std::string line;
-      std::getline(std::cin, line);
-      std::istringstream iss(line);
       std::string s, t, d, p = "time";
-      while (getline(iss, in, ' ')) {
+      do {
+        cin >> in;
         if (in == "-s") {
-          getline(iss, s, ' ');
+          cin >> s;
+        } else if (in == "-t") {
+          cin >> t;
+        } else if (in == "-d") {
+          cin >> d;
+        } else if (in == "-p") {
+          cin >> p;
+        } else if (in.length() > 0 and in[0] == '[') {
+          index = in;
         }
-        if (in == "-t") {
-          getline(iss, t, ' ');
-        }
-        if (in == "-d") {
-          getline(iss, d, ' ');
-        }
-        if (in == "-p") {
-          getline(iss, p, ' ');
-        }
-      }
+      } while (in.length() > 0 and in[0] != '[');
       Time time;
       time.month = stoi(d.substr(0, 2));
       time.day = stoi(d.substr(3, 2));
@@ -646,38 +645,31 @@ int main() {
            << res3[0].startTime2 << " -> " << t << ' ' << res3[0].endTime2
            << ' ' << res3[0].price2 << ' ' << res3[0].num2 << '\n';
     } else if (command[0] == 'b') { // buy_ticket
-      std::string line;
-      std::getline(std::cin, line);
-      std::istringstream iss(line);
       std::string u, i, d, s, f, t;
       bool q = false;
       int n = -1;
-      while (getline(iss, in, ' ')) {
+      do {
+        cin >> in;
         if (in == "-u") {
-          getline(iss, u, ' ');
-        }
-        if (in == "-i") {
-          getline(iss, i, ' ');
-        }
-        if (in == "-d") {
-          getline(iss, d, ' ');
-        }
-        if (in == "-n") {
-          getline(iss, s, ' ');
-          n = stoi(s);
-        }
-        if (in == "-f") {
-          getline(iss, f, ' ');
-        }
-        if (in == "-t") {
-          getline(iss, t, ' ');
-        }
-        if (in == "-q") {
-          getline(iss, s, ' ');
+          cin >> u;
+        } else if (in == "-i") {
+          cin >> i;
+        } else if (in == "-d") {
+          cin >> d;
+        } else if (in == "-n") {
+          cin >> n;
+        } else if (in == "-q") {
+          cin >> s;
           if (s == "true")
             q = true;
+        } else if (in == "-f") {
+          cin >> f;
+        } else if (in == "-t") {
+          cin >> t;
+        } else if (in.length() > 0 and in[0] == '[') {
+          index = in;
         }
-      }
+      } while (in.length() > 0 and in[0] != '[');
       if (user_pool.find(u) == user_pool.end()) {
         std::cout << "-1\n";
         continue;
@@ -724,15 +716,15 @@ int main() {
         waiting_list.insert(demo_order2);
       }
     } else if (command[0] == 'q' and command[6] == 'o') { // query_order
-      std::string line;
-      std::getline(std::cin, line);
-      std::istringstream iss(line);
       std::string u;
-      while (getline(iss, in, ' ')) {
+      do {
+        cin >> in;
         if (in == "-u") {
-          getline(iss, u, ' ');
+          cin >> u;
+        } else if (in.length() > 0 and in[0] == '[') {
+          index = in;
         }
-      }
+      } while (in.length() > 0 and in[0] != '[');
       if (user_pool.find(u) == user_pool.end()) {
         std::cout << "-1\n";
         continue;
@@ -750,20 +742,18 @@ int main() {
         cout << order;
       }
     } else if (command[0] == 'r' and command[2] == 'f') { // refund_ticket
-      std::string line;
-      std::getline(std::cin, line);
-      std::istringstream iss(line);
-      std::string u, s;
+      std::string u;
       int n = 1;
-      while (getline(iss, in, ' ')) {
+      do {
+        cin >> in;
         if (in == "-u") {
-          getline(iss, u, ' ');
+          cin >> u;
+        } else if (in == "-n") {
+          cin >> n;
+        } else if (in.length() > 0 and in[0] == '[') {
+          index = in;
         }
-        if (in == "-n") {
-          getline(iss, s, ' ');
-          n = stoi(s);
-        }
-      }
+      } while (in.length() > 0 and in[0] != '[');
       if (user_pool.find(u) == user_pool.end()) {
         std::cout << "-1\n";
         continue;
