@@ -9,7 +9,7 @@
 using namespace std;
 char max_password[31];
 char max_trainid[21];
-Time max_time;
+Time min_time, max_time;
 int max_ind;
 BPT<Index_user> user_table("_user");
 BPT<Index_train> train_table("_train");
@@ -20,16 +20,18 @@ sjtu::map<std::string, Index_user> user_pool;
 MemoryRiver<Order> order_river("order_");
 MemoryRiver<Train> train_river("train_");
 MemoryRiver<User> user_river("user_");
-sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t) {
-  DateLocation_Train query_dlt, query_dlt_max;
-  strcpy(query_dlt.to, s.c_str());
-  query_dlt.date = time;
+sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t,
+                                     bool transfer) {
+  DateLocation_Train query_dlt_min, query_dlt_max;
+  strcpy(query_dlt_min.to, s.c_str());
+  query_dlt_min.date = min_time;
   strcpy(query_dlt_max.to, s.c_str());
-  query_dlt_max.date = time;
-  query_dlt_max.date.hour = 23;
-  query_dlt_max.date.minute = 60;
+  if (!transfer)
+    query_dlt_max.date = time;
+  else
+    query_dlt_max.date = max_time;
   sjtu::vector<DateLocation_Train> res =
-      date_location_train_table.find(query_dlt, query_dlt_max);
+      date_location_train_table.find(query_dlt_min, query_dlt_max);
   sjtu::vector<DemoTrain> res3;
   for (int i = 0; i < res.size(); i++) {
     Index_train query_train, query_train_max;
@@ -57,14 +59,26 @@ sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t) {
       time2 += train.travelTimes[j];
       time2 += train.stopoverTimes[j];
     }
-    int index = time - time2;
+    Time tmp = time;
+    tmp.hour = time2.hour;
+    tmp.minute = time2.minute;
+    while (transfer and time > tmp) {
+      ++tmp;
+    }
+    while (transfer and time2 > tmp) {
+      ++tmp;
+    }
+    int index = tmp - time2;
+    if (index < 0 or index > train.saleDate[1] - train.saleDate[0]) {
+      continue;
+    }
     int valseatNum = train.seatTotal - train.seatNum[index][begin];
     Time time3;
     for (int j = begin; j < train.stationNum; j++) {
       if (strcmp(train.stations[j], t.c_str()) == 0) {
         DemoTrain dt;
         strcpy(dt.trainID, train.trainID);
-        dt.startTime = res[i].date;
+        dt.startTime = tmp;
         dt.endTime = dt.startTime + time3;
         dt.num = valseatNum;
         dt.prices = price;
@@ -82,16 +96,13 @@ sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t) {
   return res3;
 }
 sjtu::vector<DemoTrain2> _query_transfer(string &s, Time &time, string &t) {
-  DateLocation_Train query_dlt, query_dlt_max;
-  strcpy(query_dlt.to, s.c_str());
-  query_dlt.date = time;
+  DateLocation_Train query_dlt_min, query_dlt_max;
+  strcpy(query_dlt_min.to, s.c_str());
+  query_dlt_min.date = min_time;
   strcpy(query_dlt_max.to, s.c_str());
-  strcpy(query_dlt_max.trainID, max_trainid);
   query_dlt_max.date = time;
-  query_dlt_max.date.hour = 23;
-  query_dlt_max.date.minute = 60;
   sjtu::vector<DateLocation_Train> res =
-      date_location_train_table.find(query_dlt, query_dlt_max);
+      date_location_train_table.find(query_dlt_min, query_dlt_max);
   sjtu::vector<DemoTrain2> res3;
   for (int i = 0; i < res.size(); i++) {
     Index_train query_train, query_train_max;
@@ -120,45 +131,45 @@ sjtu::vector<DemoTrain2> _query_transfer(string &s, Time &time, string &t) {
       time2 += train.stopoverTimes[j];
     }
     int index = time - time2;
+    if (index > train.saleDate[1] - train.saleDate[0]) {
+      continue;
+    }
     int valseatNum = train.seatTotal - train.seatNum[index][begin];
     // assert(begin != -1);
     Time time3 = time;
     time3.hour = time2.hour;
     time3.minute = time2.minute;
+    Time tmp = time3;
     Time time4;
     for (int j = begin; j < train.stationNum; j++) {
       if (j != begin and strcmp(train.stations[j], t.c_str()) != 0) {
         string s2 = train.stations[j];
         sjtu::vector<DemoTrain> dt;
-        Time time2 = time3;
-        while (time2 < max_time) {
-          dt = _query_train(s2, time2, t);
-          for (int k = 0; k < dt.size(); k++) {
-            if (strcmp(dt[k].trainID, train.trainID) == 0) {
-              dt.erase(k);
-              k--;
-            }
+        dt = _query_train(s2, time3, t, true);
+        for (int k = 0; k < dt.size(); k++) {
+          if (strcmp(dt[k].trainID, train.trainID) == 0) {
+            dt.erase(k);
+            k--;
           }
-          ++time2;
-          time2.hour = 0;
-          time2.minute = 0;
-          for (int k = 0; k < dt.size(); k++) {
-            DemoTrain2 dt2;
-            strcpy(dt2.trainID, train.trainID);
-            strcpy(dt2.trainID2, dt[k].trainID);
-            dt2.startTime = res[i].date;
-            dt2.endTime = dt2.startTime + time4;
-            dt2.startTime2 = dt[k].startTime;
-            dt2.endTime2 = dt[k].endTime;
-            dt2.num = min(valseatNum, dt[k].num);
-            dt2.prices = price + dt[k].prices;
-            dt2.price1 = price;
-            dt2.price2 = dt[k].prices;
-            dt2.num1 = valseatNum;
-            dt2.num2 = dt[k].num;
-            strcpy(dt2.transfer_locate, train.stations[j]);
-            res3.push_back(dt2);
-          }
+        }
+        for (int k = 0; k < dt.size(); k++) {
+          DemoTrain2 dt2;
+          strcpy(dt2.trainID, train.trainID);
+          strcpy(dt2.trainID2, dt[k].trainID);
+          dt2.startTime = time;
+          dt2.startTime.hour = tmp.hour;
+          dt2.startTime.minute = tmp.minute;
+          dt2.endTime = dt2.startTime + time4;
+          dt2.startTime2 = dt[k].startTime;
+          dt2.endTime2 = dt[k].endTime;
+          dt2.num = min(valseatNum, dt[k].num);
+          dt2.prices = price + dt[k].prices;
+          dt2.price1 = price;
+          dt2.price2 = dt[k].prices;
+          dt2.num1 = valseatNum;
+          dt2.num2 = dt[k].num;
+          strcpy(dt2.transfer_locate, train.stations[j]);
+          res3.push_back(dt2);
         }
       }
       valseatNum = min(valseatNum, train.seatTotal - train.seatNum[index][j]);
@@ -180,12 +191,14 @@ int main() {
   cin.tie(0);
   cout.tie(0);
   ios::sync_with_stdio(false);
-  // freopen("../testcases/basic_2/2.in", "r", stdin);
+  // freopen("../testcases/pressure_2_hard/83.in", "r", stdin);
   // freopen("../self.out", "w", stdout);
   memset(max_password, 127, sizeof(max_password));
   max_password[30] = 0;
   memset(max_trainid, 127, sizeof(max_trainid));
   max_trainid[20] = 0;
+  min_time.month = 6;
+  min_time.day = 1;
   max_time.month = 9;
   max_time.day = 4;
   max_time.hour = 23;
@@ -478,17 +491,15 @@ int main() {
       }
       train.release = true;
       train_river.update(train, res[0].pos);
-      for (Time t = train.saleDate[0]; t <= train.saleDate[1]; ++t) {
-        Time t2 = t + train.startTime;
-        for (int i = 0; i < train.stationNum; i++) {
-          DateLocation_Train dlt;
-          dlt.date = t2;
-          strcpy(dlt.to, train.stations[i]);
-          strcpy(dlt.trainID, train.trainID);
-          date_location_train_table.insert(dlt);
-          t2 += train.travelTimes[i];
-          t2 += train.stopoverTimes[i];
-        }
+      Time t2 = train.saleDate[0] + train.startTime;
+      for (int i = 0; i < train.stationNum; i++) {
+        DateLocation_Train dlt;
+        dlt.date = t2;
+        strcpy(dlt.to, train.stations[i]);
+        strcpy(dlt.trainID, train.trainID);
+        date_location_train_table.insert(dlt);
+        t2 += train.travelTimes[i];
+        t2 += train.stopoverTimes[i];
       }
       cout << "0\n";
     } else if (command == "query_train") {
@@ -575,7 +586,9 @@ int main() {
       Time time;
       time.month = stoi(d.substr(0, 2));
       time.day = stoi(d.substr(3, 2));
-      sjtu::vector<DemoTrain> res3 = _query_train(s, time, t);
+      time.hour = 23;
+      time.minute = 60;
+      sjtu::vector<DemoTrain> res3 = _query_train(s, time, t, false);
       cout << res3.size() << '\n';
       if (p == "time") {
         res3.sort(timecmp);
@@ -609,6 +622,8 @@ int main() {
       Time time;
       time.month = stoi(d.substr(0, 2));
       time.day = stoi(d.substr(3, 2));
+      time.hour = 23;
+      time.minute = 60;
       sjtu::vector<DemoTrain2> res3 = _query_transfer(s, time, t);
       if (res3.empty()) {
         cout << "0\n";
