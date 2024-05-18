@@ -32,6 +32,23 @@ sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t,
     query_dlt_max.date = max_time;
   sjtu::vector<DateLocation_Train> res =
       date_location_train_table.find(query_dlt_min, query_dlt_max);
+  strcpy(query_dlt_min.to, t.c_str());
+  strcpy(query_dlt_max.to, t.c_str());
+  query_dlt_max.date = max_time;
+  sjtu::vector<DateLocation_Train> res2 =
+      date_location_train_table.find(query_dlt_min, query_dlt_max);
+  sjtu::map<string, bool> mp;
+  for (int i = 0; i < res2.size(); i++) {
+    string s = res2[i].trainID;
+    mp[s] = true;
+  }
+  for (int i = 0; i < res.size(); i++) {
+    string s = res[i].trainID;
+    if (mp.find(s) == mp.end()) {
+      res.erase(i);
+      i--;
+    }
+  }
   sjtu::vector<DemoTrain> res3;
   for (int i = 0; i < res.size(); i++) {
     Index_train query_train, query_train_max;
@@ -192,7 +209,7 @@ int main() {
   cin.tie(0);
   cout.tie(0);
   ios::sync_with_stdio(false);
-  // freopen("../testcases/pressure_2_hard/83.in", "r", stdin);
+  // freopen("../testcases/basic_extra/33.in", "r", stdin);
   // freopen("../self.out", "w", stdout);
   memset(max_password, 127, sizeof(max_password));
   max_password[30] = 0;
