@@ -22,6 +22,7 @@ bool valid_type(const std::string &t);
 struct Index_train {
   char trainID[21] = {};
   int pos = 0;
+  bool release = false;
   Index_train() { std::memset(this, 0, sizeof(Index_train)); }
   bool operator<(const Index_train &rhs) const {
     int trainID_cmp = std::strcmp(trainID, rhs.trainID);
@@ -45,7 +46,6 @@ struct Index_train {
   }
 };
 struct Train {
-  bool release = false;
   char trainID[21] = {};
   int stationNum = 0;
   char stations[101][31] = {};

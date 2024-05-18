@@ -123,7 +123,7 @@ void query_trains(Train *train, Time *date) {
 bool buy_ticket(Train &train, const std::string &u, const std::string &i,
                 const std::string &d, const std::string &f,
                 const std::string &t, int n, bool p, Order &order) {
-  if (train.release == false or train.seatTotal < n) {
+  if (train.seatTotal < n) {
     return false;
   }
   int pos = -1;

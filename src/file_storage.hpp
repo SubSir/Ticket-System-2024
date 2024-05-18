@@ -1262,7 +1262,7 @@ public:
 #endif
 
 using namespace sjtu;
-template <class T, int degree = 70> class BPT {
+template <class T, int degree = 60> class BPT {
 public:
   struct node {
     bool is_leaf;

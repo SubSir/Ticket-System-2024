@@ -57,14 +57,11 @@ sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t,
     query_train_max.pos = max_ind;
     sjtu::vector<Index_train> res2 =
         train_table.find(query_train, query_train_max);
-    if (res2.empty()) {
+    if (res2.empty() or !res2[0].release) {
       continue;
     }
     Train train;
     train_river.read(train, res2[0].pos);
-    if (!train.release) {
-      continue;
-    }
     int price = 0;
     Time time2 = train.saleDate[0] + train.startTime;
     int begin = -1;
@@ -128,14 +125,11 @@ sjtu::vector<DemoTrain2> _query_transfer(string &s, Time &time, string &t) {
     query_train_max.pos = max_ind;
     sjtu::vector<Index_train> res2 =
         train_table.find(query_train, query_train_max);
-    if (res2.empty()) {
+    if (res2.empty() or !res2[0].release) {
       continue;
     }
     Train train;
     train_river.read(train, res2[0].pos);
-    if (!train.release) {
-      continue;
-    }
     int price = 0;
     int begin = -1;
     Time time2 = train.saleDate[0] + train.startTime;
@@ -230,10 +224,10 @@ int main() {
     cin >> index;
     cin >> command;
     cout << index << " ";
-    if (command == "exit") {
+    if (command[0] == 'e') { // exit
       cout << "bye" << '\n';
       return 0;
-    } else if (command == "clear") {
+    } else if (command[0] == 'c') { // clear
       user_table.clear();
       train_table.clear();
       date_location_train_table.clear();
@@ -241,7 +235,7 @@ int main() {
       waiting_list.clear();
       order_river.clear();
       user_pool.clear();
-    } else if (command == "add_user") {
+    } else if (command[0] == 'a' and command[4] == 'u') { // add_user
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
@@ -299,7 +293,7 @@ int main() {
       o++;
       order_river.write_info(o, 1);
       std::cout << "0\n";
-    } else if (command == "login") {
+    } else if (command[0] == 'l' and command[3] == 'i') { // login
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
@@ -332,7 +326,7 @@ int main() {
       }
       user_pool[u] = res[0];
       std::cout << "0\n";
-    } else if (command == "logout") {
+    } else if (command[0] == 'l' and command[3] == 'o') { // logout
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
@@ -348,7 +342,7 @@ int main() {
       }
       user_pool.erase(user_pool.find(u));
       std::cout << "0\n";
-    } else if (command == "query_profile") {
+    } else if (command[0] == 'q' and command[6] == 'p') { // query_profile
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
@@ -378,7 +372,7 @@ int main() {
       User user;
       user_river.read(user, res[0].pos);
       query_profile(&user);
-    } else if (command == "modify_profile") {
+    } else if (command[0] == 'm') { // modify_profile
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
@@ -430,7 +424,7 @@ int main() {
         user_pool[u] = res[0];
       }
       user_river.update(user, res[0].pos);
-    } else if (command == "add_train") {
+    } else if (command[0] == 'a' and command[4] == 't') { // add_train
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
@@ -481,7 +475,7 @@ int main() {
       index_train.pos = pos;
       train_table.insert(index_train);
       cout << "0\n";
-    } else if (command == "release_train") {
+    } else if (command[0] == 'r' and command[2] == 'l') { // release_train
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
@@ -497,18 +491,15 @@ int main() {
       query_train_max.pos = max_ind;
       sjtu::vector<Index_train> res =
           train_table.find(query_train, query_train_max);
-      if (res.empty()) {
+      if (res.empty() or res[0].release) {
         std::cout << "-1\n";
         continue;
       }
       Train train;
       train_river.read(train, res[0].pos);
-      if (train.release) {
-        std::cout << "-1\n";
-        continue;
-      }
-      train.release = true;
-      train_river.update(train, res[0].pos);
+      train_table.erase(res[0]);
+      res[0].release = true;
+      train_table.insert(res[0]);
       Time t2 = train.saleDate[0] + train.startTime;
       for (int i = 0; i < train.stationNum; i++) {
         DateLocation_Train dlt;
@@ -520,7 +511,7 @@ int main() {
         t2 += train.stopoverTimes[i];
       }
       cout << "0\n";
-    } else if (command == "query_train") {
+    } else if (command[0] == 'q' and command[8] == 'a') { // query_train
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
@@ -553,7 +544,7 @@ int main() {
         continue;
       }
       query_trains(&train, &t);
-    } else if (command == "delete_train") {
+    } else if (command[0] == 'd') { // delete_train
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
@@ -569,20 +560,16 @@ int main() {
       query_train_max.pos = max_ind;
       sjtu::vector<Index_train> res =
           train_table.find(query_train, query_train_max);
-      if (res.empty()) {
+      if (res.empty() or res[0].release) {
         std::cout << "-1\n";
         continue;
       }
       Train train;
       train_river.read(train, res[0].pos);
-      if (train.release) {
-        std::cout << "-1\n";
-        continue;
-      }
       train_table.erase(res[0]);
       std::cout << "0\n";
       continue;
-    } else if (command == "query_ticket") {
+    } else if (command[0] == 'q' and command[7] == 'i') { // query_ticket
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
@@ -618,7 +605,7 @@ int main() {
              << " -> " << t << ' ' << res3[i].endTime << ' ' << res3[i].prices
              << ' ' << res3[i].num << '\n';
       }
-    } else if (command == "query_transfer") {
+    } else if (command[0] == 'q' and command[8] == 'n') { // query_transfer
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
@@ -658,7 +645,7 @@ int main() {
       cout << res3[0].trainID2 << ' ' << res3[0].transfer_locate << ' '
            << res3[0].startTime2 << " -> " << t << ' ' << res3[0].endTime2
            << ' ' << res3[0].price2 << ' ' << res3[0].num2 << '\n';
-    } else if (command == "buy_ticket") {
+    } else if (command[0] == 'b') { // buy_ticket
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
@@ -701,16 +688,12 @@ int main() {
       query_train_max.pos = max_ind;
       sjtu::vector<Index_train> res =
           train_table.find(query_train, query_train_max);
-      if (res.empty()) {
+      if (res.empty() or !res[0].release) {
         std::cout << "-1\n";
         continue;
       }
       Train train;
       train_river.read(train, res[0].pos);
-      if (!train.release) {
-        std::cout << "-1\n";
-        continue;
-      }
       Order order;
       bool bl = buy_ticket(train, u, i, d, f, t, n, q, order);
       train_river.update(train, res[0].pos);
@@ -740,7 +723,7 @@ int main() {
         demo_order2.n = n;
         waiting_list.insert(demo_order2);
       }
-    } else if (command == "query_order") {
+    } else if (command[0] == 'q' and command[6] == 'o') { // query_order
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
@@ -766,7 +749,7 @@ int main() {
         order_river.read(order, res[i].pos);
         cout << order;
       }
-    } else if (command == "refund_ticket") {
+    } else if (command[0] == 'r' and command[2] == 'f') { // refund_ticket
       std::string line;
       std::getline(std::cin, line);
       std::istringstream iss(line);
