@@ -48,13 +48,13 @@ struct Index_train {
 struct Train {
   char trainID[21] = {};
   int stationNum = 0;
-  char stations[32][31] = {};
+  char stations[22][31] = {};
   int seatTotal = 0;
-  int seatNum[94][32] = {}; // 你知道这很浪费
-  int prices[32] = {};
+  int seatNum[94][22] = {}; // 你知道这很浪费
+  int prices[22] = {};
   Time startTime = {};
-  Time travelTimes[32] = {};
-  Time stopoverTimes[32] = {};
+  Time travelTimes[22] = {};
+  Time stopoverTimes[22] = {};
   Time saleDate[2] = {};
   char type[2] = {};
   bool operator<(const Train &rhs) const {
