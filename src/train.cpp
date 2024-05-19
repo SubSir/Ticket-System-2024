@@ -128,7 +128,7 @@ bool buy_ticket(Train &train, const std::string &u, const std::string &i,
   }
   int pos = -1;
   Time st = train.startTime + train.saleDate[0];
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < train.stationNum; i++) {
     if (strcmp(train.stations[i], f.c_str()) == 0) {
       pos = i;
       break;
