@@ -13,7 +13,7 @@ struct Index_user {
   char username[21] = {};
   int privilege = 0;
   int pos = 0;
-  Index_user() { std::memset(this, 0, sizeof(Index_user)); }
+  // Index_user() { std::memset(this, 0, sizeof(Index_user)); }
   bool operator<(const Index_user &rhs) const {
     int username_cmp = std::strcmp(username, rhs.username);
     if (username_cmp < 0) {
@@ -41,7 +41,7 @@ struct User {
   char name[16] = {};
   char mail[31] = {};
   int privilege = 0;
-  User() { std::memset(this, 0, sizeof(User)); }
+  // User() { std::memset(this, 0, sizeof(User)); }
   bool operator<(const User &rhs) const {
     int username_cmp = std::strcmp(username, rhs.username);
     if (username_cmp < 0) {

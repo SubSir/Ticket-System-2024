@@ -1986,7 +1986,7 @@ private:
     buffer *pre = nullptr, *next = nullptr;
   } *head = nullptr, *tail = nullptr;
   int length = 0;
-  const int Maxlength = 400;
+  const int Maxlength = 200;
   map<int, buffer *> buffer_map;
 
 public:

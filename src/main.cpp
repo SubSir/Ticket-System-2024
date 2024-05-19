@@ -14,6 +14,7 @@ int max_ind;
 BPT<Index_user> user_table("_user");
 BPT<Index_train> train_table("_train");
 BPT<DateLocation_Train> date_location_train_table("_date_location_train");
+BPT<DateLocation_Train> date_location_train_table2("_date_location_train2");
 BPT<DemoOrder> order_table("_order");
 BPT<DemoOrder2> waiting_list("_waiting_list");
 sjtu::map<std::string, Index_user> user_pool;
@@ -34,9 +35,10 @@ sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t,
       date_location_train_table.find(query_dlt_min, query_dlt_max);
   strcpy(query_dlt_min.to, t.c_str());
   strcpy(query_dlt_max.to, t.c_str());
+  query_dlt_min.date = time - 24 * 60;
   query_dlt_max.date = max_time;
   sjtu::vector<DateLocation_Train> res2 =
-      date_location_train_table.find(query_dlt_min, query_dlt_max);
+      date_location_train_table2.find(query_dlt_min, query_dlt_max);
   sjtu::map<string, bool> mp;
   for (int i = 0; i < res2.size(); i++) {
     string s = res2[i].trainID;
@@ -513,6 +515,16 @@ int main() {
         strcpy(dlt.to, train.stations[i]);
         strcpy(dlt.trainID, train.trainID);
         date_location_train_table.insert(dlt);
+        t2 += train.travelTimes[i];
+        t2 += train.stopoverTimes[i];
+      }
+      t2 = train.saleDate[1] + train.startTime;
+      for (int i = 0; i < train.stationNum; i++) {
+        DateLocation_Train dlt;
+        dlt.date = t2;
+        strcpy(dlt.to, train.stations[i]);
+        strcpy(dlt.trainID, train.trainID);
+        date_location_train_table2.insert(dlt);
         t2 += train.travelTimes[i];
         t2 += train.stopoverTimes[i];
       }
