@@ -14,7 +14,7 @@ int max_ind;
 BPT<Index_user> user_table("_user");
 BPT<Index_train> train_table("_train");
 BPT<DateLocation_Train> date_location_train_table("_date_location_train");
-BPT<DateLocation_Train> date_location_train_table2("_date_location_train2");
+BPT<LocEndloc_Train> locendloc_train_table("_locendloc_train");
 BPT<DemoOrder> order_table("_order");
 BPT<DemoOrder2> waiting_list("_waiting_list");
 sjtu::map<std::string, Index_user> user_pool;
@@ -23,34 +23,14 @@ MemoryRiver<Train> train_river("train_");
 MemoryRiver<User> user_river("user_");
 sjtu::vector<DemoTrain> _query_train(string &s, Time &time, string &t,
                                      bool transfer) {
-  DateLocation_Train query_dlt_min, query_dlt_max;
-  strcpy(query_dlt_min.to, s.c_str());
-  query_dlt_min.date = min_time;
-  strcpy(query_dlt_max.to, s.c_str());
-  if (!transfer)
-    query_dlt_max.date = time;
-  else
-    query_dlt_max.date = max_time;
-  sjtu::vector<DateLocation_Train> res =
-      date_location_train_table.find(query_dlt_min, query_dlt_max);
+  LocEndloc_Train query_dlt_min, query_dlt_max;
+  strcpy(query_dlt_min.from, s.c_str());
   strcpy(query_dlt_min.to, t.c_str());
+  strcpy(query_dlt_max.from, s.c_str());
   strcpy(query_dlt_max.to, t.c_str());
-  query_dlt_min.date = time - 24 * 60;
-  query_dlt_max.date = max_time;
-  sjtu::vector<DateLocation_Train> res2 =
-      date_location_train_table2.find(query_dlt_min, query_dlt_max);
-  sjtu::map<string, bool> mp;
-  for (int i = 0; i < res2.size(); i++) {
-    string s = res2[i].trainID;
-    mp[s] = true;
-  }
-  for (int i = 0; i < res.size(); i++) {
-    string s = res[i].trainID;
-    if (mp.find(s) == mp.end()) {
-      res.erase(i);
-      i--;
-    }
-  }
+  strcpy(query_dlt_max.trainID, max_trainid);
+  sjtu::vector<LocEndloc_Train> res =
+      locendloc_train_table.find(query_dlt_min, query_dlt_max);
   sjtu::vector<DemoTrain> res3;
   for (int i = 0; i < res.size(); i++) {
     Index_train query_train, query_train_max;
@@ -518,18 +498,17 @@ int main() {
         t2 += train.travelTimes[i];
         t2 += train.stopoverTimes[i];
       }
-      t2 = train.saleDate[1] + train.startTime;
-      for (int i = 0; i < train.stationNum; i++) {
-        DateLocation_Train dlt;
-        dlt.date = t2;
-        strcpy(dlt.to, train.stations[i]);
-        strcpy(dlt.trainID, train.trainID);
-        date_location_train_table2.insert(dlt);
-        t2 += train.travelTimes[i];
-        t2 += train.stopoverTimes[i];
+      LocEndloc_Train dlt;
+      for (int i = 0; i < train.stationNum - 1; i++) {
+        for (int j = i + 1; j < train.stationNum; j++) {
+          strcpy(dlt.from, train.stations[i]);
+          strcpy(dlt.to, train.stations[j]);
+          strcpy(dlt.trainID, train.trainID);
+          locendloc_train_table.insert(dlt);
+        }
       }
       cout << "0\n";
-    } else if (command[0] == 'q' and command[8] == 'a') { // query_train
+    } else if (command[0] == 'q' and command[9] == 'i') { // query_train
       std::string i, c;
       do {
         cin >> in;
@@ -619,7 +598,7 @@ int main() {
              << " -> " << t << ' ' << res3[i].endTime << ' ' << res3[i].prices
              << ' ' << res3[i].num << '\n';
       }
-    } else if (command[0] == 'q' and command[8] == 'n') { // query_transfer
+    } else if (command[0] == 'q' and command[9] == 'n') { // query_transfer
       std::string s, t, d, p = "time";
       do {
         cin >> in;

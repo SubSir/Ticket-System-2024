@@ -372,6 +372,39 @@ struct DateLocation_Train {
     return (*this < rhs) or (rhs < *this);
   }
 };
+struct LocEndloc_Train {
+  char from[31] = {};
+  char to[31] = {};
+  char trainID[21] = {};
+  // LocEndloc_Train() { std::memset(this, 0, sizeof(LocEndloc_Train)); }
+  bool operator<(const LocEndloc_Train &rhs) const {
+    int from_cmp = std::strcmp(from, rhs.from);
+    if (from_cmp < 0) {
+      return true;
+    } else if (from_cmp > 0) {
+      return false;
+    }
+    int to_cmp = std::strcmp(to, rhs.to);
+    if (to_cmp < 0) {
+      return true;
+    } else if (to_cmp > 0) {
+      return false;
+    }
+    int trainID_cmp = std::strcmp(trainID, rhs.trainID);
+    if (trainID_cmp < 0) {
+      return true;
+    } else if (trainID_cmp > 0) {
+      return false;
+    }
+    return false;
+  }
+  bool operator>(const LocEndloc_Train &rhs) const { return rhs < *this; }
+  bool operator>=(const LocEndloc_Train &rhs) const { return !(*this < rhs); }
+  bool operator<=(const LocEndloc_Train &rhs) const { return !(rhs < *this); }
+  bool operator!=(const LocEndloc_Train &rhs) const {
+    return (*this < rhs) or (rhs < *this);
+  }
+};
 
 bool add_train(const std::string &i, int n, int m, const std::string &s,
                const std::string p, const std::string &x, const std::string &t,
