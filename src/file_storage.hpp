@@ -1244,7 +1244,7 @@ public:
    * Finds an element with key equivalent to key.
    * key value of the element to search for.
    * Iterator to an element with key equivalent to key.
-   *   If no such element is found, past-the-end (see end()) iterator is
+   *   If no such element is found, past-the-end (see end()) iterator is a
    * returned.
    */
   iterator find(const Key &key) {
